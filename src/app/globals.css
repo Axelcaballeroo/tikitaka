@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #193b3a;
+  --muted: #607b79;
+  --cream: #fffdf8;
+  --mint: #e6f7f3;
+  --teal: #167f75;
+  --teal-dark: #0e5f58;
+  --yellow: #ffd86b;
+  --lilac: #ded7ff;
+  --pink: #ffdce5;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-cream: var(--cream);
+  --color-mint: var(--mint);
+  --color-brand: var(--teal);
+  --color-brand-dark: var(--teal-dark);
+  --color-sun: var(--yellow);
+  --color-lilac: var(--lilac);
+  --color-blush: var(--pink);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-fredoka);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--cream); color: var(--ink); font-family: var(--font-manrope), sans-serif; }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: var(--yellow); color: var(--ink); }
+
+.container-page { width: min(1180px, calc(100% - 2rem)); margin-inline: auto; }
+.display { font-family: var(--font-fredoka), sans-serif; letter-spacing: -0.035em; }
+.soft-shadow { box-shadow: 0 18px 50px rgba(20, 78, 72, .10); }
+.dot-pattern { background-image: radial-gradient(rgba(22,127,117,.16) 1.25px, transparent 1.25px); background-size: 20px 20px; }
+
+@keyframes float { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(1deg); } }
+.float-slow { animation: float 5s ease-in-out infinite; }
+
