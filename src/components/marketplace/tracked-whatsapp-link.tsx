@@ -1,0 +1,2 @@
+"use client";
+export function TrackedWhatsappLink({providerId,source,page,href,className,children}:{providerId:string;source:string;page:string;href:string;className:string;children:React.ReactNode}){const track=()=>{fetch("/api/contact-events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({providerId,source,page}),keepalive:true}).catch(()=>undefined);};return <a data-whatsapp-tracked href={href} target="_blank" rel="noreferrer" onClick={track} className={className}>{children}</a>}

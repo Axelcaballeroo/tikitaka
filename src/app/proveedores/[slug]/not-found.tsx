@@ -1,0 +1,3 @@
+import { ButtonLink } from "@/components/ui/button";
+
+export default function ProviderNotFound() { return <section className="container-page py-24 text-center"><div className="mx-auto max-w-xl rounded-[2.5rem] bg-mint p-10 md:p-14"><span className="display text-7xl font-semibold text-brand/25">404</span><h1 className="display mt-4 text-4xl font-semibold">Este proveedor no está disponible</h1><p className="mt-4 leading-7 text-muted">Puede que el perfil haya cambiado de dirección o ya no forme parte del catálogo. Hay muchas otras opciones para explorar.</p><ButtonLink href="/servicios" className="mt-7">Volver al catálogo →</ButtonLink></div></section>; }

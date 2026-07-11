@@ -1,0 +1,3 @@
+"use client";
+import { useEffect } from "react";
+export function WhatsappPageTracker({providerId,page}:{providerId:string;page:string}){useEffect(()=>{const handler=(event:MouseEvent)=>{const target=event.target as HTMLElement|null;const link=target?.closest<HTMLAnchorElement>('a[href*="wa.me"]');if(!link||link.hasAttribute("data-whatsapp-tracked"))return;fetch("/api/contact-events",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({providerId,source:"provider_profile",page}),keepalive:true}).catch(()=>undefined);};document.addEventListener("click",handler);return()=>document.removeEventListener("click",handler);},[providerId,page]);return null;}

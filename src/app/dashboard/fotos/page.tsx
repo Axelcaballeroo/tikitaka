@@ -1,0 +1,3 @@
+import { PhotosEditor } from "@/components/dashboard/photos-editor";
+import { getAccountImages, requireAccount } from "@/lib/auth/account";
+export default async function PhotosPage() { const {provider}=await requireAccount();if(!provider)return <p>No encontramos tu perfil.</p>;const images=await getAccountImages(provider.id);return <><p className="text-xs font-extrabold uppercase tracking-[.16em] text-brand">Identidad visual</p><h1 className="display mt-2 text-4xl font-semibold">Mis fotos</h1><p className="mt-3 text-muted">Usá URLs remotas para mostrar tu espacio y tu propuesta.</p><PhotosEditor provider={provider} images={images} /></>; }

@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth/profile";
+import { deleteReview, moderateReview } from "@/lib/data/reviews";
+export async function PATCH(request:Request,{params}:{params:Promise<{id:string}>}){try{await requireAdminApi();const{id}=await params;const{action}=await request.json();if(action!=="approve"&&action!=="hide")return NextResponse.json({error:"Acción inválida."},{status:400});await moderateReview(id,action);return NextResponse.json({ok:true});}catch(error){const message=error instanceof Error?error.message:"No se pudo actualizar.";return NextResponse.json({error:message},{status:message==="No autorizado"?403:500});}}
+export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){try{await requireAdminApi();const{id}=await params;await deleteReview(id);return NextResponse.json({ok:true});}catch(error){const message=error instanceof Error?error.message:"No se pudo eliminar.";return NextResponse.json({error:message},{status:message==="No autorizado"?403:500});}}

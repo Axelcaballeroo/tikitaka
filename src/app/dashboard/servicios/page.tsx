@@ -1,0 +1,3 @@
+import { ServicesEditor } from "@/components/dashboard/services-editor";
+import { getAccountServices, requireAccount } from "@/lib/auth/account";
+export default async function ServicesPage() { const { provider }=await requireAccount(); if(!provider)return <p>No encontramos tu perfil.</p>; const services=await getAccountServices(provider.id); return <><p className="text-xs font-extrabold uppercase tracking-[.16em] text-brand">Tu propuesta</p><h1 className="display mt-2 text-4xl font-semibold">Mis servicios</h1><p className="mt-3 text-muted">Creá, editá y organizá lo que ofrecés.</p><ServicesEditor providerId={provider.id} initialServices={services} /></>; }

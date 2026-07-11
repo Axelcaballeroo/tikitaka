@@ -1,103 +1,38 @@
 import Image from "next/image";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { ButtonLink } from "@/components/ui/button";
+import { SectionTitle } from "@/components/ui/section-title";
+import { CategoryCard } from "@/components/marketplace/category-card";
+import { ProviderCard } from "@/components/marketplace/provider-card";
+import { SmartSearch } from "@/components/marketplace/smart-search";
+import { StatsSection } from "@/components/marketplace/stats-section";
+import { Testimonials } from "@/components/marketplace/testimonials";
+import { CTASection } from "@/components/marketplace/cta-section";
+import { stats } from "@/lib/mock-data";
+import { getCategories } from "@/lib/data/categories";
+import { getProviders } from "@/lib/data/providers";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+export const metadata: Metadata = { title: "Tiki Taka | Marketplace infantil en Buenos Aires", alternates: { canonical: "/" }, openGraph: { title: "Tiki Taka | Servicios infantiles de confianza", description: "Encontrá niñeras, jardines, cumpleaños, clases y salud infantil en Buenos Aires.", url: "/" }, twitter: { card: "summary_large_image", title: "Tiki Taka", description: "Encontrá servicios de confianza para tus hijos en minutos." } };
+export const dynamic = "force-dynamic";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+const trust = [["✓", "Proveedores verificados", "Información y documentación revisadas"], ["★", "Opiniones de familias", "Experiencias que ayudan a decidir"], ["⚡", "Respuesta directa", "Contacto por WhatsApp sin intermediarios"], ["♡", "Elegí con tranquilidad", "Datos claros antes de contratar"]];
+const steps = [["01", "Contanos qué buscás", "Buscá por servicio, zona o necesidad de tu familia."], ["02", "Compará con confianza", "Revisá perfiles, precios, cobertura y opiniones reales."], ["03", "Contactá directamente", "Hablá por WhatsApp y coordiná todos los detalles."]];
+
+export default async function Home() { const [categories, providers] = await Promise.all([getCategories(), getProviders()]); return <>
+  <section className="relative overflow-hidden bg-mint py-14 md:py-24"><div className="absolute inset-0 dot-pattern opacity-45" /><div className="container-page relative grid items-center gap-12 lg:grid-cols-[1.08fr_.92fr]"><div><span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-brand shadow-sm"><span className="text-amber-500">★</span> 4.9 según familias de Buenos Aires</span><h1 className="display mt-6 max-w-3xl text-5xl font-semibold leading-[1.02] md:text-7xl">Encontrá servicios de <span className="relative text-brand">confianza<svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" aria-hidden><path d="M3 8c55-8 125-7 194-2" fill="none" stroke="#FFD86B" strokeWidth="7" strokeLinecap="round" /></svg></span> para tus hijos en minutos.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-muted">Niñeras, jardines, cumpleaños, clases, salud infantil y actividades en un solo lugar.</p><SmartSearch /><div className="mt-6 flex flex-wrap items-center gap-4"><ButtonLink href="/servicios">Explorar servicios</ButtonLink><ButtonLink href="/publicar" variant="secondary">Publicar mi servicio</ButtonLink><span className="text-xs text-muted">✓ Gratis para familias</span></div></div><div className="relative mx-auto hidden w-full max-w-lg lg:block"><div className="absolute -left-8 top-14 z-10 rounded-2xl bg-white p-4 soft-shadow float-slow"><p className="text-xs text-muted">Familias satisfechas</p><p className="mt-1 font-extrabold text-amber-500">★★★★★ <span className="text-brand">4.9</span></p></div><div className="relative aspect-[4/5] overflow-hidden rounded-[3rem] shadow-2xl shadow-teal-900/15"><Image src="https://images.unsplash.com/photo-1602030028438-4cf153cbae9e?auto=format&fit=crop&w=900&q=85" alt="Familia disfrutando junta" fill priority className="object-cover" sizes="45vw" /></div><div className="absolute -bottom-6 right-0 rounded-2xl bg-sun p-5 shadow-xl"><p className="display text-2xl font-semibold">+80</p><p className="text-xs font-bold">proveedores activos</p></div></div></div></section>
+
+  <section className="border-y border-teal-900/5 bg-white py-9"><div className="container-page grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{trust.map(([icon, title, text]) => <div key={title} className="flex gap-4 rounded-2xl p-3 transition hover:bg-mint/50"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-mint font-extrabold text-brand">{icon}</span><div><h2 className="text-sm font-extrabold">{title}</h2><p className="mt-1 text-xs leading-5 text-muted">{text}</p></div></div>)}</div></section>
+  <StatsSection stats={stats} />
+
+  <section id="categorias" className="container-page py-12"><div className="flex items-end justify-between gap-5"><SectionTitle eyebrow="Categorías populares" title="Todo lo que tu familia necesita" text="Empezá por las categorías más elegidas por familias como la tuya." /><Link href="/servicios" className="hidden font-extrabold text-brand md:block">Ver todas →</Link></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{categories.slice(0, 8).map((category) => <CategoryCard key={category.slug} category={category} />)}</div></section>
+
+  <section className="bg-[#f4f0ff] py-20"><div className="container-page"><SectionTitle eyebrow="Proveedores destacados" title="Perfiles que las familias recomiendan" text="Propuestas con excelente respuesta, información completa y valoraciones sobresalientes." /><div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">{providers.filter((provider) => provider.featured).slice(0, 3).map((provider) => <ProviderCard key={provider.id} provider={provider} />)}</div><div className="mt-10 text-center"><ButtonLink href="/servicios">Ver todo el marketplace →</ButtonLink></div></div></section>
+
+  <section className="container-page py-20"><SectionTitle align="center" eyebrow="Cómo funciona" title="De la búsqueda al contacto, sin vueltas" text="Tres pasos para encontrar una propuesta que encaje con tu familia." /><div className="relative mt-12 grid gap-5 md:grid-cols-3">{steps.map(([number, title, text]) => <article key={number} className="relative rounded-[1.75rem] border border-teal-900/6 bg-white p-8 text-center shadow-[0_14px_40px_rgba(20,78,72,.07)] transition hover:-translate-y-1"><span className="display text-5xl font-semibold text-brand/20">{number}</span><h3 className="mt-5 text-lg font-extrabold">{title}</h3><p className="mt-3 text-sm leading-6 text-muted">{text}</p></article>)}</div></section>
+
+  <section className="container-page pb-20"><div className="grid overflow-hidden rounded-[2.5rem] border border-teal-900/6 bg-white lg:grid-cols-2"><div className="p-8 md:p-12"><p className="text-xs font-extrabold uppercase tracking-[.16em] text-brand">Para familias</p><h2 className="display mt-3 text-4xl font-semibold">Más información. Menos incertidumbre.</h2><div className="mt-7 space-y-5">{["Compará propuestas en un mismo lugar", "Conocé precios y cobertura antes de escribir", "Leé opiniones de otras familias", "Guardá favoritos para decidir con calma"].map((text) => <p key={text} className="flex gap-3 text-sm font-bold"><span className="text-brand">✓</span>{text}</p>)}</div><ButtonLink href="/servicios" className="mt-8">Encontrar un servicio</ButtonLink></div><div className="bg-brand p-8 text-white md:p-12"><p className="text-xs font-extrabold uppercase tracking-[.16em] text-sun">Para proveedores</p><h2 className="display mt-3 text-4xl font-semibold">Tu trabajo, frente a las familias correctas.</h2><div className="mt-7 space-y-5">{["Un perfil profesional que genera confianza", "Consultas directas por WhatsApp", "Visibilidad en tu zona y categoría", "Reseñas que construyen reputación"].map((text) => <p key={text} className="flex gap-3 text-sm font-bold text-white/85"><span className="text-sun">✓</span>{text}</p>)}</div><ButtonLink href="/publicar" className="mt-8 !bg-sun !text-ink">Conocer los planes</ButtonLink></div></div></section>
+
+  <Testimonials />
+  <section className="py-20"><CTASection /></section>
+</>; }
