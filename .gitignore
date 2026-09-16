@@ -38,6 +38,9 @@ dev-server-error.log
 
 # vercel
 .vercel
+.reports/
+.qa-private/
+/artifacts/preproduction/
 
 # typescript
 *.tsbuildinfo

@@ -1,5 +1,48 @@
+﻿"use client";
 import Link from "next/link";
-import { Logo } from "@/components/layout/logo";
-
-const links = [["▦", "Dashboard", "/admin"], ["☷", "Solicitudes", "/admin/solicitudes"], ["☺", "Proveedores", "/admin/proveedores"], ["★", "Reseñas", "/admin/resenas"], ["↗", "Analytics", "/admin/analytics"], ["✦", "Categorías", "/admin/categorias"], ["⚙", "Configuración", "/admin/configuracion"]];
-export function AdminShell({ children }: { children: React.ReactNode }) { return <div className="container-page py-6 md:py-10"><div className="grid min-h-[720px] overflow-hidden rounded-[2rem] border border-teal-900/8 bg-[#f6faf9] shadow-[0_20px_60px_rgba(20,78,72,.10)] lg:grid-cols-[240px_minmax(0,1fr)]"><aside className="bg-[#173f3d] p-5 text-white lg:p-7"><div className="[&_a]:text-white"><Logo /></div><p className="mt-3 text-xs text-white/50">Panel de administración</p><nav className="mt-7 flex gap-2 overflow-x-auto lg:grid">{links.map(([icon,label,href]) => <Link key={href} href={href} className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-white/70 transition hover:bg-white/10 hover:text-white"><span className="grid h-7 w-7 place-items-center rounded-lg bg-white/10">{icon}</span>{label}</Link>)}</nav><div className="mt-8 hidden rounded-2xl bg-white/8 p-4 text-xs leading-5 text-white/60 lg:block"><strong className="block text-white">Datos en Supabase</strong>Los cambios se aplican a la base configurada.</div></aside><div className="min-w-0 p-5 md:p-8 lg:p-10">{children}</div></div></div>; }
+import { usePathname } from "next/navigation";
+const links = [
+  ["Overview", "/admin"],
+  ["Proveedores", "/admin/proveedores"],
+  ["Solicitudes", "/admin/solicitudes"],
+  ["Reseñas", "/admin/resenas"],
+  ["Categorías", "/admin/categorias"],
+  ["Analytics", "/admin/analytics"],
+  ["Configuración", "/admin/configuracion"],
+];
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  const path = usePathname();
+  return (
+    <div className="container-page py-6">
+      <div className="grid min-h-[720px] rounded-[2rem] border border-brand/10 bg-[#f5f8f7] lg:grid-cols-[200px_minmax(0,1fr)]">
+        <aside className="min-w-0 rounded-t-[2rem] bg-[#173f3d] p-5 text-white lg:rounded-l-[2rem] lg:rounded-tr-none">
+          <Link href="/admin" className="display text-2xl font-semibold">
+            Camila OS<span className="text-yellow-300">·</span>
+          </Link>
+          <p className="mt-2 text-xs text-white/60">
+            Tiki Taka · Administración
+          </p>
+          <nav
+            aria-label="Administración"
+            className="mt-6 grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-1"
+          >
+            {links.map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={path === href ? "page" : undefined}
+                className={`rounded-xl px-3 py-3 text-xs font-bold transition hover:bg-white/10 ${path === href ? "bg-white/15 text-white" : "text-white/70"}`}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+          <Link href="/" className="mt-8 block text-xs text-white/70">
+            Volver a Tiki Taka ↗
+          </Link>
+        </aside>
+        <main className="min-w-0 p-4 md:p-7 lg:p-8">{children}</main>
+      </div>
+    </div>
+  );
+}

@@ -1,3 +1,74 @@
-import Link from "next/link";
-type Stats={totalProviders:number;publishedProviders:number;pendingProviders:number;pendingRequests:number;activeCategories:number;totalReviews:number;contactsToday:number;contactsMonth:number;pendingReviews:number;topContacted:{name:string;count:number}[]};
-export function AdminDashboard({stats}:{stats:Stats}){const metrics=[[stats.totalProviders,"Total proveedores"],[stats.publishedProviders,"Publicados"],[stats.pendingProviders,"Proveedores pendientes"],[stats.pendingRequests,"Solicitudes pendientes"],[stats.activeCategories,"Categorías activas"],[stats.totalReviews,"Total reseñas"],[stats.contactsToday,"WhatsApp hoy"],[stats.contactsMonth,"WhatsApp este mes"],[stats.pendingReviews,"Reseñas pendientes"]];return <><p className="text-xs font-extrabold uppercase tracking-[.16em] text-brand">Datos en tiempo real</p><h1 className="display mt-2 text-4xl font-semibold">Dashboard admin</h1><div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{metrics.map(([value,label])=><article key={String(label)} className="rounded-2xl bg-white p-6 shadow-sm"><p className="display text-4xl font-semibold text-brand">{value}</p><p className="mt-2 text-sm text-muted">{label}</p></article>)}</div><div className="mt-8 grid gap-6 lg:grid-cols-2"><section className="rounded-2xl bg-white p-6 shadow-sm"><h2 className="display text-2xl font-semibold">Proveedores más contactados</h2><div className="mt-5 space-y-3">{stats.topContacted.map((item,index)=><div key={item.name} className="flex justify-between rounded-xl bg-mint p-4 text-sm"><strong>{index+1}. {item.name}</strong><span>{item.count} contactos</span></div>)}{!stats.topContacted.length&&<p className="text-sm text-muted">Todavía no hay contactos registrados.</p>}</div></section><section className="rounded-2xl bg-white p-6 shadow-sm"><h2 className="display text-2xl font-semibold">Accesos rápidos</h2><div className="mt-5 grid gap-3">{[["Analytics","/admin/analytics"],["Reseñas","/admin/resenas"],["Proveedores pendientes","/admin/proveedores?filtro=pendientes"],["Marketplace","/servicios"]].map(([label,href])=><Link key={href} href={href} className="rounded-xl bg-mint p-4 text-sm font-extrabold text-brand">{label} →</Link>)}</div></section></div></>}
+﻿import Link from "next/link";
+import { ProvidersManager } from "./providers-manager";
+import type { Provider } from "@/types";
+export function AdminDashboard({
+  stats,
+  name,
+  pending,
+  error,
+}: {
+  stats: (number | null)[];
+  name: string;
+  pending: Provider[];
+  error?: boolean;
+}) {
+  return (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="home-eyebrow">Camila OS · Overview</p>
+          <h1 className="display mt-3 text-4xl font-semibold">
+            Hola, {name || "Cami"} 👋
+          </h1>
+          <p className="mt-3 text-muted">Esto está pasando en Tiki Taka.</p>
+        </div>
+        <Link href="/admin/proveedores/nuevo" className="onb-primary">
+          + Nuevo proveedor
+        </Link>
+      </div>
+      <div className="my-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          "Proveedores activos",
+          "Solicitudes pendientes",
+          "Proveedores destacados",
+          "Contactos este mes",
+        ].map((label, i) => (
+          <article
+            key={label}
+            className="rounded-3xl border border-brand/10 bg-white p-5"
+          >
+            <p className="text-xs font-bold text-muted">{label}</p>
+            <p className="display mt-4 text-4xl text-brand">
+              {stats[i] ?? "—"}
+            </p>
+            {stats[i] === null && (
+              <p className="mt-2 text-xs">Métrica no disponible</p>
+            )}
+          </article>
+        ))}
+      </div>
+      <div className="mb-8 flex flex-wrap gap-3">
+        <Link className="onb-secondary" href="/admin/resenas">
+          Reseñas pendientes: {stats[4] ?? "—"}
+        </Link>
+        <Link className="onb-secondary" href="/admin/analytics">
+          Analytics de WhatsApp ↗
+        </Link>
+      </div>
+      <h2 className="display mb-5 text-2xl font-semibold">
+        Solicitudes que necesitan atención
+      </h2>
+      {error ? (
+        <p role="alert" className="rounded-2xl bg-white p-5">
+          No pudimos cargar las solicitudes. Volvé a intentar.
+        </p>
+      ) : (
+        <ProvidersManager
+          initialProviders={pending}
+          initialFilter="pendientes"
+          compact
+        />
+      )}
+    </>
+  );
+}

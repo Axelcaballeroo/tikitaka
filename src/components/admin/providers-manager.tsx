@@ -1,17 +1,177 @@
 "use client";
-
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Provider } from "@/types";
-type Filter = "todos"|"pendientes"|"aprobados"|"rechazados"|"publicados"|"ocultos"|"verificados"|"destacados";
-const filters: {value:Filter;label:string}[]=[{value:"todos",label:"Todos"},{value:"pendientes",label:"Pendientes"},{value:"aprobados",label:"Aprobados"},{value:"rechazados",label:"Rechazados"},{value:"publicados",label:"Publicados"},{value:"ocultos",label:"Ocultos"},{value:"verificados",label:"Verificados"},{value:"destacados",label:"Destacados"}];
-
-export function ProvidersManager({ initialProviders, initialFilter="todos" }: { initialProviders: Provider[]; initialFilter?: Filter }) {
-  const [providers,setProviders]=useState(initialProviders);const [filter,setFilter]=useState<Filter>(initialFilter);const [busy,setBusy]=useState<string|null>(null);const [notice,setNotice]=useState("");
-  const visible=useMemo(()=>providers.filter((item)=>filter==="todos"||(filter==="pendientes"&&item.status==="pending")||(filter==="aprobados"&&item.status==="approved")||(filter==="rechazados"&&item.status==="rejected")||(filter==="publicados"&&item.published)||(filter==="ocultos"&&!item.published)||(filter==="verificados"&&item.verified)||(filter==="destacados"&&item.featured)),[providers,filter]);
-  const update=async(provider:Provider,patch:Partial<Provider>)=>{const next={...provider,...patch};setBusy(provider.id);setNotice("");const response=await fetch(`/api/admin/providers/${provider.id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({verified:next.verified,featured:next.featured,published:next.published,status:next.status})});if(response.ok){setProviders((current)=>current.map((item)=>item.id===provider.id?next:item));setNotice(`${provider.name} actualizado correctamente.`);}else setNotice("No se pudo completar la acción.");setBusy(null);};
-  return <><p className="text-xs font-extrabold uppercase tracking-[.16em] text-brand">Moderación</p><h1 className="display mt-2 text-4xl font-semibold">Proveedores</h1><p className="mt-3 text-muted">Revisá cuentas, estados y visibilidad del marketplace.</p><div className="mt-7 flex gap-2 overflow-x-auto pb-2">{filters.map((item)=><button key={item.value} onClick={()=>setFilter(item.value)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-extrabold ${filter===item.value?"bg-brand text-white":"bg-white text-muted"}`}>{item.label}</button>)}</div>{notice&&<p className="mt-4 rounded-xl bg-mint p-4 text-sm font-bold text-brand">{notice}</p>}<div className="mt-6 space-y-4">{visible.map((provider)=><article key={provider.id} className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="flex flex-wrap items-center gap-2"><h2 className="display text-2xl font-semibold">{provider.name}</h2><Status status={provider.status}/>{provider.published&&<Tag text="Publicado" color="emerald"/>}{provider.verified&&<Tag text="Verificado" color="teal"/>}{provider.featured&&<Tag text="Destacado" color="amber"/>}</div><p className="mt-2 text-sm font-bold text-brand">{provider.category} · {provider.zone}</p><div className="mt-3 grid gap-x-6 gap-y-1 text-xs text-muted sm:grid-cols-2"><span>Email: {provider.email||"Sin email"}</span><span>WhatsApp: {provider.whatsapp||"Sin WhatsApp"}</span><span>Alta: {new Intl.DateTimeFormat("es-AR").format(new Date(provider.createdAt))}</span><span>Rating: {provider.rating} ({provider.reviewsCount})</span></div></div><div className="flex flex-wrap gap-2 text-xs"><Link href={`/admin/proveedores/${provider.id}`} className="rounded-full border border-brand px-3 py-2 font-extrabold text-brand">Detalle admin</Link>{provider.published&&<Link href={`/proveedores/${provider.slug}`} className="rounded-full border border-teal-900/10 px-3 py-2 font-extrabold">Perfil público ↗</Link>}</div></div><div className="mt-5 flex flex-wrap gap-2 border-t border-teal-900/8 pt-5"><Action disabled={busy===provider.id} onClick={()=>update(provider,{status:"approved",published:true})}>Aprobar</Action><Action disabled={busy===provider.id} onClick={()=>update(provider,{status:"rejected",published:false})} danger>Rechazar</Action><Action disabled={busy===provider.id} onClick={()=>update(provider,{published:!provider.published})}>{provider.published?"Ocultar":"Publicar"}</Action><Action disabled={busy===provider.id} onClick={()=>update(provider,{verified:!provider.verified})}>{provider.verified?"Quitar verificación":"Marcar verificado"}</Action><Action disabled={busy===provider.id} onClick={()=>update(provider,{featured:!provider.featured})}>{provider.featured?"Quitar destacado":"Marcar destacado"}</Action></div></article>)}{!visible.length&&<p className="rounded-2xl bg-mint p-10 text-center text-muted">No hay proveedores con este filtro.</p>}</div></>;
+import {
+  adminFilters,
+  matchesAdminFilter,
+  providerState,
+} from "@/lib/admin-provider";
+import { ProfileImage } from "@/components/provider/profile-image";
+import { ProviderDetailActions } from "./provider-detail-actions";
+export function ProvidersManager({
+  initialProviders,
+  initialFilter = "todos",
+  compact = false,
+}: {
+  initialProviders: Provider[];
+  initialFilter?: string;
+  compact?: boolean;
+}) {
+  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const normalize = (s: string) =>
+    s
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  const visible = initialProviders.filter(
+    (p) =>
+      matchesAdminFilter(p, initialFilter) &&
+      normalize(
+        [p.name, p.category, p.zone, p.city, p.email].join(" "),
+      ).includes(normalize(search)),
+  );
+  return (
+    <>
+      {!compact && (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="home-eyebrow">Camila OS</p>
+              <h1 className="display mt-3 text-4xl font-semibold">
+                {initialFilter === "pendientes" ? "Solicitudes" : "Proveedores"}
+              </h1>
+              <p className="mt-3 text-sm text-muted">
+                Perfiles reales de Tiki Taka. Revisá, editá y gestioná su
+                publicación.
+              </p>
+            </div>
+            <Link href="/admin/proveedores/nuevo" className="onb-primary">
+              + Nuevo proveedor
+            </Link>
+          </div>
+          <label className="mt-7 block text-sm font-bold">
+            Buscar proveedor...
+            <input
+              className="onb-input mt-2"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nombre, categoría o zona"
+            />
+          </label>
+          <div className="my-5 flex flex-wrap gap-2">
+            {adminFilters.map((f) => (
+              <button
+                key={f}
+                aria-pressed={initialFilter === f}
+                onClick={() => router.push(`/admin/proveedores?filtro=${f}`)}
+                className={`rounded-full px-4 py-3 text-xs font-bold capitalize ${initialFilter === f ? "bg-brand text-white" : "bg-white text-brand"}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="space-y-4">
+        {visible.map((p) => (
+          <article
+            key={p.id}
+            className="min-w-0 rounded-3xl border border-brand/10 bg-white p-4 md:p-5"
+          >
+            <div className="flex items-start gap-4">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-mint">
+                <ProfileImage src={p.image} alt={p.name} sizes="64px" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="display break-words text-xl font-semibold">
+                    {p.name}
+                  </h2>
+                  <span className="rounded-full bg-mint px-3 py-1 text-xs font-bold text-brand">
+                    {providerState(p)}
+                  </span>
+                  {p.featured && (
+                    <span className="text-xs font-bold text-amber-700">
+                      ★ Destacado
+                    </span>
+                  )}
+                  {p.verified && (
+                    <span className="text-xs font-bold text-brand">
+                      ✓ Verificado
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 break-words text-sm text-muted">
+                  {p.category} ·{" "}
+                  {[p.zone, p.city].filter(Boolean).join(", ") ||
+                    "Sin ubicación"}
+                </p>
+                <p className="mt-2 text-xs text-muted">
+                  Alta:{" "}
+                  {p.createdAt
+                    ? new Date(p.createdAt).toLocaleDateString("es-AR")
+                    : "—"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Link href={`/admin/proveedores/${p.id}`} className="onb-primary">
+                Ver
+              </Link>
+              <Link
+                href={`/admin/proveedores/${p.id}/editar`}
+                className="onb-secondary"
+              >
+                Editar
+              </Link>
+              {p.whatsapp && (
+                <a
+                  href={`https://wa.me/${p.whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="onb-secondary"
+                >
+                  WhatsApp ↗
+                </a>
+              )}
+            </div>
+            <div className="mt-3">
+              <ProviderDetailActions provider={p} compact={!compact} />
+            </div>
+          </article>
+        ))}
+      </div>
+      {!visible.length && (
+        <div className="rounded-3xl bg-white p-8 text-center">
+          <h2 className="display text-2xl">
+            {initialFilter === "pendientes"
+              ? "Todo al día 🎉"
+              : "Sin proveedores"}
+          </h2>
+          <p className="mt-3 text-sm text-muted">
+            {initialFilter === "pendientes"
+              ? "No hay solicitudes pendientes."
+              : "No hay resultados para esta búsqueda."}
+          </p>
+          {!initialProviders.length && initialFilter !== "pendientes" && (
+            <Link href="/admin/proveedores/nuevo" className="onb-primary mt-5">
+              Agregar primer proveedor
+            </Link>
+          )}
+        </div>
+      )}
+      {compact && (
+        <Link
+          href="/admin/solicitudes"
+          className="mt-5 inline-block text-sm font-bold text-brand"
+        >
+          Ver todas las solicitudes →
+        </Link>
+      )}
+    </>
+  );
 }
-function Status({status}:{status:Provider["status"]}){return <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${status==="approved"?"bg-emerald-100 text-emerald-800":status==="rejected"?"bg-rose-100 text-rose-800":"bg-amber-100 text-amber-800"}`}>{status==="approved"?"Aprobado":status==="rejected"?"Rechazado":"Pendiente"}</span>}
-function Tag({text,color}:{text:string;color:"emerald"|"teal"|"amber"}){return <span className={`rounded-full px-3 py-1 text-[11px] font-extrabold ${color==="emerald"?"bg-emerald-50 text-emerald-700":color==="teal"?"bg-mint text-brand":"bg-amber-100 text-amber-800"}`}>{text}</span>}
-function Action({children,onClick,disabled,danger=false}:{children:React.ReactNode;onClick:()=>void;disabled?:boolean;danger?:boolean}){return <button disabled={disabled} onClick={onClick} className={`rounded-full px-4 py-2 text-xs font-extrabold disabled:opacity-50 ${danger?"bg-rose-50 text-rose-700":"bg-mint text-brand"}`}>{children}</button>}

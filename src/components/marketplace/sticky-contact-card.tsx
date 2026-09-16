@@ -1,6 +1,55 @@
-"use client";
-import { FavoriteButton } from "./favorite-button";
-import { TrackedWhatsappLink } from "./tracked-whatsapp-link";
+﻿import { FavoriteButton } from "./favorite-button";
 import { money } from "@/lib/utils";
 import type { Provider } from "@/types";
-export function StickyContactCard({provider}:{provider:Provider}){const url=`https://wa.me/${provider.whatsapp}?text=${encodeURIComponent(`Hola ${provider.name}, encontré tu perfil en Tiki Taka y quisiera consultar disponibilidad.`)}`;return <aside className="sticky top-24 rounded-[2rem] border border-teal-900/6 bg-white p-7 shadow-[0_20px_60px_rgba(20,78,72,.14)]"><div className="flex items-end justify-between"><div><p className="text-xs text-muted">Precio desde</p><p className="display mt-1 text-3xl font-semibold">{provider.priceFrom?money(provider.priceFrom):"A consultar"}</p></div>{provider.rating>0&&<p className="text-sm font-extrabold"><span className="text-amber-500">★</span> {provider.rating}</p>}</div><div className="my-6 space-y-4 border-y border-teal-900/8 py-6 text-sm"><p><span className="text-muted">Zona</span><br/><strong>⌖ {provider.zone}</strong></p><p><span className="text-muted">Horarios</span><br/><strong>◷ {provider.schedule}</strong></p><p className="font-bold text-brand">⚡ Responde en menos de 2 horas</p>{provider.verified&&<p className="font-bold text-brand">✓ Identidad verificada</p>}</div><TrackedWhatsappLink providerId={provider.id} source="sticky_contact" page={`/proveedores/${provider.slug}`} href={url} className="flex w-full items-center justify-center rounded-full bg-[#25D366] px-5 py-3.5 font-extrabold text-[#103d24] shadow-lg transition hover:-translate-y-0.5">Contactar por WhatsApp ↗</TrackedWhatsappLink><p className="mt-2 text-center text-[11px] text-muted">No compartimos tus datos personales</p><FavoriteButton providerId={provider.id} providerName={provider.name} variant="full" className="mt-4"/></aside>}
+import { ShareProfile } from "@/components/provider/share-profile";
+import { ProfileWhatsapp } from "@/components/provider/profile-whatsapp";
+
+export function StickyContactCard({ provider }: { provider: Provider }) {
+  const location = [provider.zone, provider.city]
+    .filter((v, i, a) => v && a.indexOf(v) === i)
+    .join(", ");
+  return (
+    <aside
+      aria-label="Contacto del proveedor"
+      className="rounded-[2rem] border border-brand/15 bg-white p-6 shadow-[0_8px_30px_#193b3a08] md:p-7"
+    >
+      <p className="home-eyebrow">Hablemos de lo que necesitás</p>
+      <h2 className="display mt-3 break-words text-2xl font-medium">
+        Contactá a {provider.name}
+      </h2>
+      <div className="my-5 space-y-3 border-y border-brand/10 py-5">
+        {provider.priceFrom > 0 && (
+          <p className="text-xs text-muted">
+            Precio desde
+            <strong className="mt-1 block text-2xl text-ink">
+              {money(provider.priceFrom)}
+            </strong>
+          </p>
+        )}
+        {location && (
+          <p className="text-sm leading-6 text-muted">⌖ {location}</p>
+        )}
+      </div>
+      {provider.whatsapp.trim() ? (
+        <ProfileWhatsapp
+          provider={provider}
+          className="flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-4 py-3 text-center text-sm font-extrabold text-white transition hover:bg-brand-dark"
+        />
+      ) : (
+        <p className="rounded-2xl bg-mint p-4 text-sm leading-6 text-muted">
+          Este proveedor todavía no publicó un número de WhatsApp.
+        </p>
+      )}
+      <p className="mt-3 text-center text-xs leading-5 text-muted">
+        Contactás directamente con el proveedor.
+      </p>
+      <FavoriteButton
+        providerId={provider.id}
+        providerName={provider.name}
+        variant="full"
+        className="my-4"
+      />
+      <ShareProfile name={provider.name} />
+    </aside>
+  );
+}

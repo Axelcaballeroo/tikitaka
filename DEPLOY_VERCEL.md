@@ -1,5 +1,11 @@
 # Deploy de Tiki Taka en Vercel
 
+> Guía histórica anterior a Tiki Taka 2.0. Para este release seguir
+> [la guía actual de deploy](docs/deploy-vercel.md) y revisar
+> [el informe de preproducción](docs/preproduccion-fase-7.md).
+> Los pasos históricos de SQL y deploy que siguen no deben ejecutarse
+> automáticamente: requieren revisión y autorización explícita.
+
 1. Subir el proyecto a GitHub sin incluir `.env.local`.
 2. Importar el repositorio desde **Add New > Project** en Vercel.
 3. Configurar las variables:

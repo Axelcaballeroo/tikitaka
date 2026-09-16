@@ -1,4 +1,4 @@
-export type Category = {
+﻿export type Category = {
   id?: string;
   slug: string;
   name: string;
@@ -37,6 +37,7 @@ export type Provider = {
   image: string;
   gallery: string[];
   services: string[];
+  serviceDetails?: ProviderService[];
   schedule: string;
   coverage: string[];
   documents: string[];
@@ -67,4 +68,9 @@ export type LocalProvider = Provider & {
   sourceRequestId: string;
   published: boolean;
   local: true;
+};
+export type ProviderService = {
+  title: string;
+  description: string;
+  priceFrom: number | null;
 };

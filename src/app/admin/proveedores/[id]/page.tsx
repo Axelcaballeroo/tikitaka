@@ -1,7 +1,124 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProviderDetailActions } from "@/components/admin/provider-detail-actions";
-import { ReviewCard } from "@/components/marketplace/review-card";
-import { getProviderById } from "@/lib/data/providers";
-export const dynamic="force-dynamic";
-export default async function AdminProviderDetail({params}:{params:Promise<{id:string}>}){const{id}=await params;const provider=await getProviderById(id);if(!provider)notFound();return <><Link href="/admin/proveedores" className="text-sm font-extrabold text-brand">← Volver a proveedores</Link><div className="mt-6 grid items-start gap-6 xl:grid-cols-[1fr_340px]"><div className="space-y-6"><section className="rounded-2xl bg-white p-6 shadow-sm"><p className="text-xs font-extrabold uppercase tracking-wider text-brand">{provider.category}</p><h1 className="display mt-2 text-4xl font-semibold">{provider.name}</h1><div className="mt-5 grid gap-4 text-sm sm:grid-cols-2"><p><span className="text-muted">Email</span><br/><strong>{provider.email||"—"}</strong></p><p><span className="text-muted">WhatsApp</span><br/><strong>{provider.whatsapp||"—"}</strong></p><p><span className="text-muted">Zona</span><br/><strong>{provider.zone}, {provider.city}</strong></p><p><span className="text-muted">Alta</span><br/><strong>{new Intl.DateTimeFormat("es-AR").format(new Date(provider.createdAt))}</strong></p></div><p className="mt-5 leading-7 text-muted">{provider.description}</p></section><section className="rounded-2xl bg-white p-6 shadow-sm"><h2 className="display text-2xl font-semibold">Servicios</h2><div className="mt-4 flex flex-wrap gap-2">{provider.services.map((item)=><span key={item} className="rounded-full bg-mint px-4 py-2 text-sm font-bold">{item}</span>)}{!provider.services.length&&<p className="text-sm text-muted">Sin servicios cargados.</p>}</div></section><section className="rounded-2xl bg-white p-6 shadow-sm"><h2 className="display text-2xl font-semibold">Fotos</h2><div className="mt-4 grid gap-3 sm:grid-cols-3">{provider.gallery.map((url,index)=><div key={`${url}-${index}`} className="h-36 rounded-xl bg-slate-100 bg-cover bg-center" style={{backgroundImage:`url(${JSON.stringify(url).slice(1,-1)})`}} />)}</div></section><section><h2 className="display text-2xl font-semibold">Reseñas ({provider.reviews.length})</h2><div className="mt-4 grid gap-4 lg:grid-cols-2">{provider.reviews.map((review)=><ReviewCard key={review.id} review={review}/>)}</div></section></div><div className="xl:sticky xl:top-24"><ProviderDetailActions provider={provider}/>{provider.published&&<Link href={`/proveedores/${provider.slug}`} className="mt-4 flex justify-center rounded-full border-2 border-brand px-5 py-3 text-sm font-extrabold text-brand">Ver perfil público ↗</Link>}</div></div></>}
+import { ProviderGallery } from "@/components/marketplace/provider-gallery";
+import { ProfileDetails } from "@/components/provider/profile-details";
+import { ProfileHeader } from "@/components/provider/profile-header";
+import { getAdminProvider, adminDatabase } from "@/lib/data/admin-providers";
+import { providerState } from "@/lib/admin-provider";
+export const dynamic = "force-dynamic";
+export default async function AdminProviderDetail({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const record = await getAdminProvider(id);
+  if (!record) notFound();
+  const p = record.provider;
+  const db = await adminDatabase();
+  const contacts = await db
+    .from("contact_events")
+    .select("*", { count: "exact", head: true })
+    .eq("provider_id", id);
+  return (
+    <>
+      <Link href="/admin/proveedores" className="text-sm font-bold text-brand">
+        ← Proveedores
+      </Link>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="home-eyebrow">{providerState(p)}</p>
+          <h1 className="display mt-3 break-words text-3xl font-semibold">
+            {p.name}
+          </h1>
+          <p className="mt-3 text-xs text-muted">
+            Solicitud: {new Date(p.createdAt).toLocaleDateString("es-AR")} ·{" "}
+            {record.userId
+              ? "Cuenta de proveedor vinculada"
+              : "Alta sin cuenta vinculada"}
+          </p>
+        </div>
+        <Link href={`/admin/proveedores/${id}/editar`} className="onb-primary">
+          Editar proveedor
+        </Link>
+      </div>
+      <section className="my-6 rounded-3xl bg-white p-5">
+        <ProviderDetailActions provider={p} />
+        <div className="mt-5 flex flex-wrap gap-3">
+          {p.whatsapp && (
+            <a
+              href={`https://wa.me/${p.whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="onb-secondary"
+            >
+              Contactar por WhatsApp
+            </a>
+          )}
+          {p.published && p.status === "approved" && (
+            <Link href={`/proveedores/${p.slug}`} className="onb-secondary">
+              Ver perfil público ↗
+            </Link>
+          )}
+          <a href="#preview" className="onb-secondary">
+            Vista previa pública
+          </a>
+        </div>
+        <p className="mt-4 text-xs text-muted">
+          Ocultar conserva servicios, fotos, reseñas y contactos. El borrado
+          definitivo está deshabilitado.
+        </p>
+      </section>
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        {[
+          [
+            "Clics WhatsApp",
+            contacts.error ? "No disponible" : String(contacts.count ?? 0),
+          ],
+          ["Reseñas públicas", String(p.reviewsCount)],
+          ["Rating público", p.reviewsCount ? String(p.rating) : "Sin reseñas"],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-2xl bg-white p-4">
+            <p className="text-xs text-muted">{label}</p>
+            <p className="mt-2 text-xl font-bold">{value}</p>
+          </div>
+        ))}
+      </div>
+      <dl className="mb-6 grid gap-4 rounded-3xl bg-white p-5 text-sm sm:grid-cols-2">
+        {[
+          ["Email", record.draft.email],
+          ["WhatsApp", record.draft.whatsapp],
+          ["Provincia", record.draft.province],
+          ["Dirección administrativa", record.address],
+          [
+            "Precio general desde",
+            record.priceFrom ? `ARS ${record.priceFrom}` : "Consultar",
+          ],
+        ].map(([label, value]) => (
+          <div key={label} className="min-w-0">
+            <dt className="text-xs text-muted">{label}</dt>
+            <dd className="mt-1 break-words font-bold">
+              {value || "Sin informar"}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <section
+        id="preview"
+        className="scroll-mt-28 space-y-6 rounded-3xl bg-white p-5 md:p-7"
+      >
+        <div className="rounded-xl bg-lilac/40 p-4">
+          <h2 className="font-bold">Vista previa pública</h2>
+          <p className="mt-2 text-sm">
+            Vista privada para administración. Los perfiles pendientes u ocultos
+            no son accesibles desde su URL pública.
+          </p>
+        </div>
+        <ProfileHeader provider={p} preview />
+        <ProviderGallery images={p.gallery} name={p.name} />
+        <ProfileDetails provider={p} preview />
+      </section>
+    </>
+  );
+}

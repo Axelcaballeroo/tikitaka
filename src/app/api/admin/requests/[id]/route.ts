@@ -1,6 +1,19 @@
-import { NextResponse } from "next/server";
-import { approveProviderRequest, deleteProviderRequest, rejectProviderRequest, updateProviderRequestFlags } from "@/lib/data/requests";
+﻿import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/auth/profile";
-
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) { try { await requireAdminApi(); const { id } = await params; const body = await request.json(); if (body.action === "approve") await approveProviderRequest(id); else if (body.action === "reject") await rejectProviderRequest(id); else if (body.action === "flags") await updateProviderRequestFlags(id, { verified: body.verified, featured: body.featured }); else return NextResponse.json({ error: "Acción inválida." }, { status: 400 }); return NextResponse.json({ ok: true }); } catch (error) { const message = error instanceof Error ? error.message : "No se pudo completar la acción."; return NextResponse.json({ error: message }, { status: message === "No autorizado" ? 403 : 500 }); } }
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) { try { await requireAdminApi(); const { id } = await params; await deleteProviderRequest(id); return NextResponse.json({ ok: true }); } catch (error) { const message = error instanceof Error ? error.message : "No se pudo eliminar."; return NextResponse.json({ error: message }, { status: message === "No autorizado" ? 403 : 500 }); } }
+import { adminFailure } from "@/lib/admin-provider-api";
+async function retired() {
+  try {
+    await requireAdminApi();
+    return NextResponse.json(
+      {
+        error:
+          "Las solicitudes históricas se conservan para consulta. Gestioná el proveedor desde Proveedores.",
+      },
+      { status: 409 },
+    );
+  } catch (e) {
+    return adminFailure(e);
+  }
+}
+export const PATCH = retired;
+export const DELETE = retired;

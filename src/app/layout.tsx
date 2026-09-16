@@ -10,14 +10,32 @@ const fredoka = Fredoka({ variable: "--font-fredoka", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: { default: "Tiki Taka | Marketplace infantil en Buenos Aires", template: "%s | Tiki Taka" },
-  description: "Encontrá servicios infantiles de confianza: niñeras, jardines, cumpleaños, clases y mucho más.",
-  openGraph: { title: "Tiki Taka", description: "Servicios de confianza para tus hijos, en un solo lugar.", type: "website", locale: "es_AR" },
-  twitter: { card: "summary_large_image", title: "Tiki Taka", description: "Servicios infantiles de confianza en Buenos Aires." },
-  robots: { index: true, follow: true },
+  title: {
+    default: "Tiki Taka | Marketplace infantil en Buenos Aires",
+    template: "%s | Tiki Taka",
+  },
+  description:
+    "Encontrá servicios infantiles de confianza: niñeras, jardines, cumpleaños, clases y mucho más.",
+  openGraph: {
+    title: "Tiki Taka",
+    description: "Servicios de confianza para tus hijos, en un solo lugar.",
+    type: "website",
+    locale: "es_AR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tiki Taka",
+    description: "Servicios infantiles de confianza en Buenos Aires.",
+  },
+  robots: {
+    index: process.env.VERCEL_ENV !== "preview",
+    follow: process.env.VERCEL_ENV !== "preview",
+  },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
       <body className={`${manrope.variable} ${fredoka.variable} antialiased`}>
