@@ -1,2 +1,5 @@
 import Link from "next/link";
-export function Logo() { return <Link href="/" className="display flex items-center gap-2 text-2xl font-semibold text-ink"><span className="grid h-9 w-9 place-items-center rounded-xl bg-brand text-lg text-white -rotate-3">T</span>Tiki Taka<span className="h-2 w-2 rounded-full bg-sun" /></Link>; }
+import Image from "next/image";
+export function Logo({ size = "navigation", priority = false }: { size?: "navigation" | "footer"; priority?: boolean }) {
+  return <Link href="/" className={`brand-logo brand-logo-${size}`} aria-label="Tiki Taka inicio"><Image src="/logo2.png" alt="Tiki Taka" width={622} height={226} sizes={size === "footer" ? "110px" : "(max-width: 639px) 121px, 132px"} priority={priority} unoptimized /></Link>;
+}

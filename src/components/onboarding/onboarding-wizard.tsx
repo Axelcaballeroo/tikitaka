@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { geographicDraft } from "@/lib/geography";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Category } from "@/types";
@@ -57,7 +58,7 @@ export function OnboardingWizard({
               saved.draft &&
               (!result.provider || saved.providerId === result.provider.id)
             ) {
-              setDraft(validateDraft(saved.draft).draft);
+              setDraft(geographicDraft(validateDraft(saved.draft).draft));
               setStep(Math.max(0, Math.min(5, Number(saved.step) || 0)));
               restored = true;
             } else localStorage.removeItem(key);
@@ -65,7 +66,7 @@ export function OnboardingWizard({
         } catch {
           setLocalAvailable(false);
         }
-        if (!restored) setDraft(result.draft);
+        if (!restored) setDraft(geographicDraft(result.draft));
         setStarted(restored || !result.provider || !result.draft.description);
       } catch (err) {
         if (active)

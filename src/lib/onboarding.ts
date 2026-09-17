@@ -1,4 +1,5 @@
-﻿export type OnboardingService = {
+import { canonicalZone, validGeography } from "@/lib/geography";
+export type OnboardingService = {
   id: string;
   title: string;
   description: string;
@@ -56,7 +57,7 @@ export const onboardingSteps = [
   "Enviar",
 ];
 export const normalizeWhatsapp = (value: string) => value.replace(/\D/g, "");
-export function validateDraft(input: unknown, complete = false) {
+export function validateDraft(input: unknown, complete = false, strictGeography = true) {
   const errors: Record<string, string> = {};
   const raw =
     input && typeof input === "object"
@@ -100,8 +101,12 @@ export function validateDraft(input: unknown, complete = false) {
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email)
   )
     errors.email = "Ingresá un email válido.";
-  if (complete && !draft.city && !draft.zone)
-    errors.zone = "Ingresá al menos una ciudad o zona.";
+  // Moderation of an existing record keeps its original geography requirement.
+  if (!strictGeography && complete && !draft.zone && !draft.city) errors.zone = "Seleccioná una ubicación.";
+  if (strictGeography && (complete || draft.zone || draft.city)) {
+    if (canonicalZone(draft.zone) !== draft.zone || !draft.zone) errors.zone = "Seleccioná una zona válida.";
+    if ((complete || draft.city) && !validGeography(draft.zone, draft.city)) errors.city = "Seleccioná una localidad de esa zona.";
+  }
   if (!Array.isArray(raw.services) || raw.services.length > 5)
     errors.services = "Podés agregar hasta 5 servicios.";
   const ids = new Set<string>();

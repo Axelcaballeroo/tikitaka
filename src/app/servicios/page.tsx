@@ -1,4 +1,5 @@
-﻿import type { Metadata } from "next";
+import { zones } from "@/lib/geography";
+import type { Metadata } from "next";
 
 import { ServicesCatalog } from "@/components/marketplace/services-catalog";
 import { getCategories } from "@/lib/data/categories";
@@ -32,9 +33,6 @@ export default async function ServicesPage() {
     providerResult.status === "fulfilled" ? providerResult.value : [];
   const categories =
     categoryResult.status === "fulfilled" ? categoryResult.value : [];
-  const zones = [
-    ...new Set(providers.map((provider) => provider.zone).filter(Boolean)),
-  ].sort((a, b) => a.localeCompare(b, "es"));
   return (
     <ServicesCatalog
       providers={providers}

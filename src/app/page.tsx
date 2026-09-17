@@ -1,4 +1,5 @@
-﻿import type { Metadata } from "next";
+import { zones } from "@/lib/geography";
+import type { Metadata } from "next";
 import { getCategories } from "@/lib/data/categories";
 import { getProviders } from "@/lib/data/providers";
 import { HeroSearch } from "@/components/home/hero-search";
@@ -28,9 +29,6 @@ export default async function Home() {
   const providers = (providerResult.status === "fulfilled" ? providerResult.value : [])
     .filter((provider) => provider.published === true && provider.status === "approved")
     .sort((a, b) => Number(b.featured) - Number(a.featured) || Number(b.verified) - Number(a.verified) || b.rating - a.rating);
-  const zoneCounts = new Map<string, number>();
-  providers.forEach(({ zone }) => { if (zone.trim()) zoneCounts.set(zone, (zoneCounts.get(zone) ?? 0) + 1); });
-  const zones = [...zoneCounts.keys()].sort((a, b) => zoneCounts.get(b)! - zoneCounts.get(a)! || a.localeCompare(b, "es"));
 
   return <div className="home-page"><HeroSearch categories={categories} zones={zones} /><CategoryExplorer categories={categories} /><FeaturedProviders providers={providers.slice(0, 4)} /><MomentCollections categories={categories} /><TrustSection /><NearbySection zones={zones} /><ProviderCTA /><PlansPreview /></div>;
 }

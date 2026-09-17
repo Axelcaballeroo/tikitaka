@@ -1,4 +1,5 @@
 "use client";
+import { geographicDraft } from "@/lib/geography";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,7 +22,7 @@ export function ProviderEditor({
   categories: Category[];
 }) {
   const router = useRouter();
-  const [draft, setDraft] = useState(record?.draft ?? emptyDraft),
+  const [draft, setDraft] = useState(() => geographicDraft(record?.draft ?? emptyDraft)),
     [address, setAddress] = useState(record?.address ?? ""),
     [priceFrom, setPrice] = useState(record?.priceFrom ?? ""),
     [cover, setCover] = useState(record?.coverImage ?? ""),

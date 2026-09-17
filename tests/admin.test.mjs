@@ -21,7 +21,7 @@ const load = (path, deps = {}) => {
   );
   return exports;
 };
-const onboarding = load("src/lib/onboarding.ts");
+const onboarding = load("src/lib/onboarding.ts", { "@/lib/geography": load("src/lib/geography.ts") });
 const admin = load("src/lib/admin-provider.ts", { "./onboarding": onboarding });
 const storage = load("src/lib/provider-storage.ts");
 test("Cola pendiente y listado publicado comparten las reglas exactas", () => {

@@ -127,3 +127,15 @@ body:has(.provider-profile-with-contact) > footer { padding-bottom: calc(7rem + 
 .onb-error { border-radius: .85rem; background: #fff1f2; padding: 1rem; color: #9f1239; font-size: .875rem; line-height: 1.6; }
 .onboarding-page :is(button,a,input,textarea,select):focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .onboarding-page input[type=file] { font-size: .75rem; }
+
+/* Official branding and shared dependent geography controls. */
+.brand-logo{display:inline-flex;align-items:center;flex-shrink:0;width:fit-content}
+.brand-logo img{display:block;width:auto;height:48px;object-fit:contain}
+.brand-logo-footer img{height:40px}
+@media(max-width:639px){.brand-logo-navigation img{height:44px}}
+.geography-field{display:grid;min-width:0;gap:8px;font-size:13px;font-weight:700}
+.geography-field select{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #dce5df;border-radius:12px;background:white;font:inherit}
+.geography-field select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.geography-field select:disabled{background:#f5f7f5;color:#64746d}
+.geography-field small{color:#b4233b}
+.geography-legacy{grid-column:1/-1;font-size:13px;color:#74582d}

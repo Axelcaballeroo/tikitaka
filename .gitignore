@@ -45,3 +45,10 @@ dev-server-error.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local QA evidence and temporary files
+/artifacts/
+*.log
+*.log.*
+*.tmp
+*.temp

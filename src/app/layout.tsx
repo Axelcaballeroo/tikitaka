@@ -9,6 +9,7 @@ const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"] });
 const fredoka = Fredoka({ variable: "--font-fredoka", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  icons: { icon: [{ url: "/logo1.png", type: "image/png", sizes: "165x183" }], shortcut: "/logo1.png", apple: [{ url: "/logo1.png", type: "image/png", sizes: "165x183" }] },
   metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Tiki Taka | Marketplace infantil en Buenos Aires",
