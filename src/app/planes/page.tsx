@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { PlanOptions } from "@/components/plans/plan-options";
 export const metadata: Metadata = {
   title: "Planes para proveedores",
@@ -18,26 +18,6 @@ export default function PlansPage() {
         </p>
       </header>
       <PlanOptions />
-      <div className="mx-auto mt-10 max-w-3xl space-y-5 rounded-3xl bg-white p-6 text-sm leading-7 text-muted">
-        <h2 className="display text-2xl font-semibold text-ink">
-          Elegí tu próximo paso
-        </h2>
-        <p>
-          Podés crear tu perfil sin elegir un plan pago. Si te interesa
-          Destacado, escribinos para conocer las condiciones y coordinar su
-          activación.
-        </p>
-        <p>
-          Las estadísticas de contactos están disponibles también en Básico.
-          Destacado mejora la presencia del perfil en selecciones y en el orden
-          Recomendados; no garantiza consultas ni un puesto fijo en todas las
-          búsquedas.
-        </p>
-        <p>
-          PRO está en preparación. Todavía no se activa como plan de una cuenta.
-          Las consultas se coordinan directamente con el equipo de Tiki Taka.
-        </p>
-      </div>
     </section>
   );
 }

@@ -34,7 +34,7 @@ export function Footer() {
     <footer className="border-t border-brand/10 bg-white py-12 md:py-16">
       <div className="container-page grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <Logo />
+          <Logo size="footer" />
           <p className="mt-5 max-w-xs text-sm leading-7 text-muted">
             Para acompañarte en cada pequeño gran momento de la vida en familia.
           </p>

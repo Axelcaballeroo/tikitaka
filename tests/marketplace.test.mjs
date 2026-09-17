@@ -1,4 +1,4 @@
-﻿import { test } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
@@ -17,7 +17,7 @@ function loadModule(file, dependencies = {}) {
   return exports;
 }
 const { readCatalogFilters, filterAndSortProviders } = loadModule(
-  "src/lib/marketplace-filters.ts",
+  "src/lib/marketplace-filters.ts", { "@/lib/geography": loadModule("src/lib/geography.ts"), "@/lib/provider-search": loadModule("src/lib/provider-search.ts", { "@/lib/geography": loadModule("src/lib/geography.ts") }) },
 );
 const provider = (id, extra = {}) => ({
   id,
@@ -67,16 +67,10 @@ test("Recomendados prioriza destacado y verificado, sin excluir normales", () =>
     ["destacado", "verificado", "normal"],
   );
 });
-test("Orden de precio coloca precios desconocidos al final en ambos sentidos", () => {
-  const items = [
-    provider("sin", { priceFrom: 0 }),
-    provider("bajo"),
-    provider("alto", { priceFrom: 200 }),
-  ];
-  assert.deepEqual(run(items, "sort=price-asc"), ["bajo", "alto", "sin"]);
-  assert.deepEqual(run(items, "sort=price-desc"), ["alto", "bajo", "sin"]);
-  assert.deepEqual(run(items, "minPrice=150&maxPrice=250"), ["alto"]);
-  assert.deepEqual(run(items, "minPrice=250&maxPrice=150"), []);
+test("Legacy price parameters do not filter or reorder records", () => {
+ const items = [provider("sin", {priceFrom:0}), provider("bajo"), provider("alto", {priceFrom:200})];
+ for (const query of ["sort=price-asc", "sort=price-desc", "minPrice=150&maxPrice=250"]) assert.deepEqual(run(items,query),run(items));
+ assert.equal(items[2].priceFrom,200);
 });
 test("Rating sin reseñas no se usa para recomendar ni filtrar", () => {
   assert.deepEqual(
@@ -94,8 +88,8 @@ test("URL inválida no genera orden o precio imposible", () => {
     ),
   );
   assert.equal(filters.sort, "recommended");
-  assert.equal(filters.minPrice, "");
-  assert.equal(filters.maxPrice, "");
+  assert.equal(filters.minPrice, undefined);
+  assert.equal(filters.maxPrice, undefined);
   assert.equal(filters.verified, false);
 });
 test("Marketplace usa filtros públicos y propaga error controlado sin mocks", async () => {

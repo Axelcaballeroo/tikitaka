@@ -1,4 +1,5 @@
-﻿import type { Category } from "@/types";
+import { GeographyFields } from "@/components/geography-fields";
+import type { Category } from "@/types";
 import type { OnboardingDraft, OnboardingService } from "@/lib/onboarding";
 
 type Props = {
@@ -237,13 +238,12 @@ export function ServicesStep({ draft, errors, update }: Props) {
 export function ContactStep({ draft, errors, update }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
+      <GeographyFields value={draft} onChange={value => { update("zone", value.zone); update("city", value.city); }} required errors={errors} />
       {(
         [
           ["WhatsApp", "whatsapp", "tel"],
           ["Email de contacto", "email", "email"],
-          ["Ciudad", "city", "text"],
           ["Provincia", "province", "text"],
-          ["Zona / barrio", "zone", "text"],
         ] as const
       ).map(([label, key, type]) => (
         <OnboardingField

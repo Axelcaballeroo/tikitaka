@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -20,7 +20,6 @@ import type { Category, Provider } from "@/types";
 export function ServicesCatalog({
   providers,
   categories,
-  zones,
   initialQuery = "",
   initialLocation = "",
   initialCategory = "",
@@ -57,7 +56,7 @@ export function ServicesCatalog({
   );
   const [drawer, setDrawer] = useState<"filters" | "sort" | null>(null);
   const update = (patch: Partial<CatalogFilters>) => {
-    const next = { ...filters, ...patch };
+    const next = { ...filters, ...(patch.location !== undefined && patch.location !== filters.location ? { localidad: "" } : {}), ...patch };
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(next))
       if (
@@ -79,8 +78,7 @@ export function ServicesCatalog({
       q: "",
       location: "",
       category: "",
-      minPrice: "",
-      maxPrice: "",
+      localidad: "",
       rating: "",
       verified: false,
       featured: false,
@@ -112,7 +110,6 @@ export function ServicesCatalog({
     <CatalogFilterFields
       filters={filters}
       categories={categories}
-      zones={zones}
       update={update}
       clear={clear}
     />
@@ -141,8 +138,7 @@ export function ServicesCatalog({
       (groups.find((g) => g.value === filters.category)?.name ??
         categories.find((c) => c.slug === filters.category)?.name ??
         "Categorías seleccionadas"),
-    filters.minPrice && `Desde $${filters.minPrice}`,
-    filters.maxPrice && `Hasta $${filters.maxPrice}`,
+    filters.localidad && `Localidad: ${filters.localidad}`,
     Number(filters.rating) > 0 && `★ ${filters.rating}+`,
     filters.verified && "Verificados",
     filters.featured && "Destacados",
@@ -181,13 +177,12 @@ export function ServicesCatalog({
               key={`${filters.q}-${filters.location}`}
               query={filters.q}
               location={filters.location}
-              zones={zones}
+              showGeography={false}
               onSubmit={(e) => {
                 e.preventDefault();
                 const data = new FormData(e.currentTarget);
                 update({
                   q: String(data.get("q") ?? "").trim(),
-                  location: String(data.get("location") ?? "").trim(),
                 });
               }}
             />
@@ -195,32 +190,7 @@ export function ServicesCatalog({
         </div>
       </section>
       <div className="container-page">
-        <nav
-          aria-label="Categorías rápidas"
-          className="catalog-chips flex gap-2 overflow-x-auto py-6"
-        >
-          <button
-            type="button"
-            aria-pressed={!filters.category}
-            onClick={() => update({ category: "" })}
-            className={`catalog-chip ${!filters.category ? "catalog-chip-active" : ""}`}
-          >
-            Todos
-          </button>
-          {groups.map((group) => (
-            <button
-              type="button"
-              key={group.name}
-              disabled={!group.value}
-              aria-pressed={filters.category === group.value}
-              onClick={() => update({ category: group.value })}
-              className={`catalog-chip ${filters.category === group.value ? "catalog-chip-active" : ""}`}
-            >
-              <span aria-hidden>{group.icon}</span> {group.name}
-            </button>
-          ))}
-        </nav>
-        <div className="grid items-start gap-7 lg:grid-cols-[230px_minmax(0,1fr)]">
+        <div className="grid items-start gap-7 pt-7 lg:grid-cols-[230px_minmax(0,1fr)]">
           <aside
             aria-label="Filtros"
             className="hidden rounded-3xl border border-brand/10 bg-white p-5 lg:block"
@@ -306,7 +276,7 @@ export function ServicesCatalog({
                     ⌕
                   </span>
                   <h2 className="display mt-4 text-3xl">
-                    No encontramos servicios con esos filtros.
+                    {filters.q ? `No encontramos resultados para '${filters.q}'.` : "No encontramos servicios con esos filtros."}
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-muted">
                     Probá ampliar tu búsqueda para encontrar otras propuestas.
@@ -326,20 +296,7 @@ export function ServicesCatalog({
                         Ampliar zona
                       </button>
                     )}
-                    <button
-                      onClick={() => {
-                        update({ category: "" });
-                        document
-                          .querySelector('[aria-label="Categorías rápidas"]')
-                          ?.scrollIntoView({
-                            block: "center",
-                            behavior: "smooth",
-                          });
-                      }}
-                      className="catalog-chip"
-                    >
-                      Explorar categorías
-                    </button>
+                    <Link href="/servicios" className="catalog-chip">Ver todos los servicios</Link>
                   </div>
                 </div>
               )}

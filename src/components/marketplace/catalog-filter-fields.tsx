@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { GeographyFields } from "@/components/geography-fields";
 import type { Category } from "@/types";
 import type { CatalogFilters } from "@/lib/marketplace-filters";
 export type UpdateFilters = (patch: Partial<CatalogFilters>) => void;
@@ -8,13 +9,11 @@ const field =
 export function CatalogFilterFields({
   filters,
   categories,
-  zones,
   update,
   clear,
 }: {
   filters: CatalogFilters;
   categories: Category[];
-  zones: string[];
   update: UpdateFilters;
   clear: () => void;
 }) {
@@ -40,70 +39,7 @@ export function CatalogFilterFields({
           ))}
         </select>
       </label>
-      <label className="block text-sm font-extrabold">
-        Ubicación / zona
-        <select
-          aria-label="Ubicación / zona"
-          value={filters.location}
-          onChange={(e) => update({ location: e.target.value })}
-          className={field}
-        >
-          <option value="">Todas las zonas</option>
-          {filters.location && !zones.includes(filters.location) && (
-            <option value={filters.location}>{filters.location}</option>
-          )}
-          {zones.map((zone) => (
-            <option key={zone}>{zone}</option>
-          ))}
-        </select>
-      </label>
-      <fieldset>
-        <legend className="text-sm font-extrabold">Precio desde · ARS</legend>
-        <form
-          key={`${filters.minPrice}-${filters.maxPrice}`}
-          onSubmit={(e) => {
-            e.preventDefault();
-            const data = new FormData(e.currentTarget);
-            update({
-              minPrice: String(data.get("minPrice") ?? ""),
-              maxPrice: String(data.get("maxPrice") ?? ""),
-            });
-          }}
-        >
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <label className="min-w-0 text-xs text-muted">
-              Mínimo
-              <input
-                type="number"
-                name="minPrice"
-                min="0"
-                step="any"
-                defaultValue={filters.minPrice}
-                placeholder="Sin mínimo"
-                className={field}
-              />
-            </label>
-            <label className="min-w-0 text-xs text-muted">
-              Máximo
-              <input
-                type="number"
-                name="maxPrice"
-                min="0"
-                step="any"
-                defaultValue={filters.maxPrice}
-                placeholder="Sin máximo"
-                className={field}
-              />
-            </label>
-          </div>
-          <button className="mt-2 min-h-11 text-xs font-bold text-brand underline underline-offset-4">
-            Aplicar precio
-          </button>
-        </form>
-        <p className="text-xs leading-5 text-muted">
-          Valores orientativos. Cada proveedor confirma su propuesta.
-        </p>
-      </fieldset>
+      <GeographyFields value={{ zone: filters.location, city: filters.localidad }} zoneName="location" cityName="localidad" onChange={value => update({ location: value.zone, localidad: value.city })} />
       <label className="block text-sm font-extrabold">
         Puntuación mínima
         <select

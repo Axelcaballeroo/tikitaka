@@ -35,7 +35,7 @@ export async function PATCH(request: Request, { params }: Context) {
         throw new AdminInputError(
           "Cargá una portada antes de publicar este proveedor de alta manual.",
         );
-      const checked = validateDraft(record.draft, true);
+      const checked = validateDraft(record.draft, true, false);
       if (!checked.valid)
         throw new AdminInputError(
           "Completá los datos obligatorios antes de publicar.",
