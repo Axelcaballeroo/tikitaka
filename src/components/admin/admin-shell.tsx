@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 const links = [
@@ -14,7 +14,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   return (
     <div className="container-page py-6">
-      <div className="grid min-h-[720px] rounded-[2rem] border border-brand/10 bg-[#f5f8f7] lg:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="grid min-h-[720px] rounded-[2rem] border border-brand/10 bg-surface-warm lg:grid-cols-[200px_minmax(0,1fr)]">
         <aside className="min-w-0 rounded-t-[2rem] bg-[#173f3d] p-5 text-white lg:rounded-l-[2rem] lg:rounded-tr-none">
           <Link href="/admin" className="display text-2xl font-semibold">
             Camila OS<span className="text-yellow-300">·</span>
@@ -31,7 +31,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 key={href}
                 href={href}
                 aria-current={path === href ? "page" : undefined}
-                className={`rounded-xl px-3 py-3 text-xs font-bold transition hover:bg-white/10 ${path === href ? "bg-white/15 text-white" : "text-white/70"}`}
+                className={`rounded-xl px-3 py-3 text-xs font-bold transition hover:bg-white/10 ${path === href ? "bg-primary-muted text-ink" : "text-white/70"}`}
               >
                 {label}
               </Link>

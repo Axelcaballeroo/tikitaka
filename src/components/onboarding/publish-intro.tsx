@@ -42,10 +42,7 @@ export function PublishIntro() {
             Contanos sobre tu servicio, sumá tus fotos y revisá cómo se verá tu
             perfil antes de enviarlo.
           </p>
-          <details className="mt-7">
-            <summary className="onb-primary w-fit cursor-pointer list-none">
-              Empezar →
-            </summary>
+          <div className="mt-7">
             <div className="mt-5 space-y-3">
               <p className="text-sm leading-6 text-muted">
                 Creá una cuenta para guardar tu progreso o ingresá si ya tenés
@@ -53,14 +50,14 @@ export function PublishIntro() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <ButtonLink href="/registro?next=%2Fpublicar">
-                  Crear cuenta
+                  Crear cuenta y publicar →
                 </ButtonLink>
                 <ButtonLink href="/login?next=%2Fpublicar" variant="secondary">
                   Iniciar sesión
                 </ButtonLink>
               </div>
             </div>
-          </details>
+          </div>
           <p className="mt-6 text-xs leading-6 text-muted">
             Sin elegir un plan y sin pagos.{" "}
             <Link

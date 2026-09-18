@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ProviderCard } from "./provider-card";
-import { ServiceSearchForm } from "./service-search-form";
+import { LiveSearch } from "./live-search";
 import { CatalogFilterFields } from "./catalog-filter-fields";
 import { CatalogDrawer } from "./catalog-drawer";
 import { CatalogRecommendations } from "./catalog-recommendations";
@@ -56,7 +56,8 @@ export function ServicesCatalog({
   );
   const [drawer, setDrawer] = useState<"filters" | "sort" | null>(null);
   const update = (patch: Partial<CatalogFilters>) => {
-    const next = { ...filters, ...(patch.location !== undefined && patch.location !== filters.location ? { localidad: "" } : {}), ...patch };
+    const current = readCatalogFilters(new URLSearchParams(window.location.search));
+    const next = { ...current, ...(patch.location !== undefined && patch.location !== current.location ? { localidad: "" } : {}), ...patch };
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(next))
       if (
@@ -65,7 +66,8 @@ export function ServicesCatalog({
         !(key === "sort" && value === "recommended") &&
         !(key === "rating" && value === "0")
       )
-        query.set(key, String(value));
+        query.set(key === "location" ? "zona" : key, String(value));
+    if (`/servicios${query.size ? `?${query}` : ""}` === window.location.pathname + window.location.search) return;
     // Native history integrates with App Router search params without refetching providers.
     window.history.pushState(
       null,
@@ -84,7 +86,8 @@ export function ServicesCatalog({
       featured: false,
       sort: "recommended",
     });
-  const results = filterAndSortProviders(providers, filters);
+  const filterKey = searchParams.toString();
+  const results = useMemo(() => filterAndSortProviders(providers, readCatalogFilters(new URLSearchParams(filterKey))), [providers, filterKey]);
   const groups = useMemo(
     () =>
       collections.map((c) => ({
@@ -168,24 +171,9 @@ export function ServicesCatalog({
               Servicios
             </span>
           </nav>
-          <h1 className="home-title !mt-4">Encontrá lo que necesitás</h1>
-          <p className="mt-3 text-sm text-muted">
-            Personas, lugares y propuestas para cada momento de tu familia.
-          </p>
+          <h1 className="home-title !mt-4">Encontrá lo que necesites en un solo click</h1>
           <div className="mt-6">
-            <ServiceSearchForm
-              key={`${filters.q}-${filters.location}`}
-              query={filters.q}
-              location={filters.location}
-              showGeography={false}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const data = new FormData(e.currentTarget);
-                update({
-                  q: String(data.get("q") ?? "").trim(),
-                });
-              }}
-            />
+            <LiveSearch query={filters.q} providers={providers} onSearch={q => update({ q })} />
           </div>
         </div>
       </section>

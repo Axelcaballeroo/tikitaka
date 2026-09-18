@@ -1,4 +1,4 @@
-﻿import { safeReturnPath } from "@/lib/onboarding";
+import { safeReturnPath } from "@/lib/onboarding";
 import type { Metadata } from "next";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getCategories } from "@/lib/data/categories";
@@ -15,6 +15,7 @@ export default async function RegisterPage({
   const params = await searchParams;
   const nextPath = safeReturnPath(
     typeof params.next === "string" ? params.next : null,
+    "/publicar",
   );
   const categories = await getCategories();
   return (

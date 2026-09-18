@@ -12,34 +12,34 @@ export function PlanOptions() {
       {[
         {
           id: "basico",
-          name: "BÁSICO",
-          title: "Gratis",
+          name: "Para empezar",
+          title: "Tiki Taka Gratis",
           description: "Tu primer paso para conectar con familias.",
           benefits: basicBenefits,
           href: "/publicar",
           cta: "Crear mi perfil gratis",
-          style: "bg-white border-brand/10",
+          style: "plan-free",
         },
         {
           id: "destacado",
-          name: "DESTACADO",
-          title: "Más visibilidad",
+          name: "Para dar el siguiente paso",
+          title: "Tiki Taka PRO",
           description: "Dale más presencia a tu propuesta dentro de Tiki Taka.",
           benefits: featuredBenefits,
           href: planContact(),
           cta: "Quiero destacar mi perfil",
-          style: "bg-mint border-brand/25",
+          style: "plan-pro",
         },
         {
-          id: "pro",
-          name: "PRO",
-          title: "Marketing + crecimiento",
+          id: "negocios",
+          name: "Para crecer en equipo",
+          title: "Tiki Taka Negocios",
           description:
             "Una propuesta de acompañamiento que estamos preparando.",
           benefits: proBenefits,
-          href: planContact("PRO"),
+          href: planContact("Negocios"),
           cta: "Hablar con Tiki Taka",
-          style: "bg-lilac/30 border-brand/10",
+          style: "plan-business",
         },
       ].map((plan) => (
         <article
@@ -47,9 +47,10 @@ export function PlanOptions() {
           id={plan.id}
           className={`flex min-w-0 scroll-mt-28 flex-col rounded-[2rem] border p-6 md:p-8 ${plan.style}`}
         >
+          {plan.id === "destacado" && <span id="pro" className="scroll-mt-28" />}
           <p className="home-eyebrow">
             {plan.name}
-            {plan.id === "pro" ? " · En preparación" : ""}
+            {plan.id === "negocios" ? " · En preparación" : ""}
           </p>
           <h2 className="display mt-5 text-3xl font-semibold">{plan.title}</h2>
           <p className="mt-4 text-sm leading-7 text-muted">
@@ -78,7 +79,7 @@ export function PlanOptions() {
             </CommercialContact>
           )}
           <p className="mt-4 text-xs leading-6 text-muted">
-            {plan.id === "pro"
+            {plan.id === "negocios"
               ? "Beneficios propuestos, sujetos a la definición del servicio. Consultá al equipo."
               : plan.id === "destacado"
                 ? "Activación coordinada con Tiki Taka. Consultá las condiciones con el equipo."

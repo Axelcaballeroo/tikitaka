@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import { GeographyFields } from "@/components/geography-fields";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,11 +14,12 @@ const initial = {
   businessName: "",
   categorySlug: "",
   zone: "",
+  city: "",
   whatsapp: "",
 };
 export function RegisterForm({
   categories,
-  nextPath = "/dashboard",
+  nextPath = "/publicar",
 }: {
   categories: Category[];
   nextPath?: string;
@@ -140,14 +142,7 @@ export function RegisterForm({
             ))}
           </select>
         </Field>
-        <Field label="Zona">
-          <input
-            required
-            value={form.zone}
-            onChange={(e) => set("zone", e.target.value)}
-            className="input"
-          />
-        </Field>
+        <GeographyFields value={form} onChange={value => setForm(current => ({ ...current, ...value }))} required />
         <Field label="WhatsApp" className="sm:col-span-2">
           <input
             required
@@ -176,13 +171,13 @@ export function RegisterForm({
         .input {
           margin-top: 0.5rem;
           width: 100%;
-          border: 1px solid rgba(14, 95, 88, 0.14);
+          border: 1px solid var(--border-soft);
           border-radius: 0.75rem;
           padding: 0.75rem;
           outline: none;
         }
         .input:focus {
-          border-color: #167f75;
+          border-color: var(--primary);
         }
       `}</style>
     </form>

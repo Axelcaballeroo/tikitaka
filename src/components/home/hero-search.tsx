@@ -1,8 +1,8 @@
-﻿import { ServiceSearchForm } from "@/components/marketplace/service-search-form";
+import { ServiceSearchForm } from "@/components/marketplace/service-search-form";
 import Image from "next/image";
 import Link from "next/link";
 import type { Category } from "@/types";
-import { collectionHref, collections, homePhoto } from "./home-content";
+import { collectionHref, collections } from "./home-content";
 
 export function HeroSearch({
   categories,
@@ -19,7 +19,7 @@ export function HeroSearch({
     ["Actividades", collections[4].slugs],
   ] as const;
   return (
-    <section className="home-hero container-page">
+    <section className="home-hero container-page hero-warm">
       <div className="home-hero-copy">
         <p className="home-eyebrow">
           <span className="mr-2 inline-block h-2 w-2 rounded-full bg-brand" />
@@ -34,16 +34,18 @@ export function HeroSearch({
           Encontrá servicios, profesionales y lugares de confianza cerca tuyo.
         </p>
       </div>
-      <div className="home-hero-photo relative overflow-hidden rounded-[2rem] bg-mint lg:rounded-[3rem_3rem_7rem_3rem]">
-        <Image
-          src={homePhoto}
-          alt="Un momento compartido en familia"
+      <div className="home-hero-photo relative">
+        <span aria-hidden className="hero-spark">✳</span>
+        <div className="hero-photo-frame"><Image
+          src="/gordo.jpeg"
+          alt="Un bebé sonriente jugando en casa"
           fill
           priority
-          sizes="(max-width: 767px) 100vw, 48vw"
-          className="object-cover"
+          sizes="(max-width: 767px) 100vw, (max-width: 1023px) 48vw, 560px"
+          className="hero-baby object-cover"
         />
-        <div className="absolute bottom-5 left-5 rounded-2xl md:bottom-auto md:top-5 bg-white/95 px-5 py-3 text-sm font-bold">
+        </div>
+        <div className="hero-photo-note">
           Más tiempo para <span className="text-brand">estar juntos.</span>{" "}
           <span aria-hidden>♡</span>
         </div>

@@ -1,3 +1,4 @@
+import { validGeography } from "@/lib/geography";
 import { getSiteUrl } from "@/lib/site-url";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
       "businessName",
       "categorySlug",
       "zone",
+      "city",
       "whatsapp",
     ];
     if (
@@ -27,6 +29,7 @@ export async function POST(request: Request) {
         { error: "Completá todos los campos." },
         { status: 400 },
       );
+    if (!validGeography(body.zone, body.city)) return NextResponse.json({ error: "Seleccioná una zona y localidad válidas." }, { status: 400 });
     if (body.password.length < 6)
       return NextResponse.json(
         { error: "La contraseña debe tener al menos 6 caracteres." },
@@ -102,7 +105,7 @@ export async function POST(request: Request) {
         zone: body.zone.trim(),
         whatsapp: body.whatsapp.trim(),
         email: body.email.trim(),
-        city: "Buenos Aires",
+        city: body.city.trim(),
         province: "Buenos Aires",
         status: "pending",
         published: false,

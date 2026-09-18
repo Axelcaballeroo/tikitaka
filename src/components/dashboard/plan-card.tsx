@@ -46,13 +46,13 @@ export function PlanCard({
         {provider.featured ? (
           <CommercialContact
             className="onb-primary"
-            href={planContact("Destacado", provider.businessName)}
+            href={planContact("PRO", provider.businessName)}
           >
             Consultar con Tiki Taka
           </CommercialContact>
         ) : (
           <Link className="onb-primary" href="/planes#destacado">
-            Conocer Tiki Taka Destacado
+            Conocer Tiki Taka PRO
           </Link>
         )}
         {!full && (

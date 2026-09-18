@@ -1,4 +1,4 @@
-﻿import { ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 export function PlansPreview() {
   return (
     <section className="container-page home-section text-center">
@@ -11,22 +11,22 @@ export function PlansPreview() {
       <div className="mt-8 grid gap-4 text-left md:grid-cols-3">
         {[
           [
-            "BÁSICO",
+            "TIKI TAKA GRATIS",
             "Gratis",
             "Publicá y empezá a recibir consultas.",
-            "bg-mint",
+            "plan-free",
           ],
           [
-            "DESTACADO",
+            "TIKI TAKA PRO",
             "Más visibilidad",
             "Mayor presencia en recomendados y en Home.",
-            "bg-lilac/50",
+            "plan-pro",
           ],
           [
-            "PRO",
+            "TIKI TAKA NEGOCIOS",
             "Marketing + crecimiento",
             "Una propuesta de acompañamiento personalizado.",
-            "bg-sun/25",
+            "plan-business",
           ],
         ].map(([name, title, text, color], index) => (
           <article key={name} className={`rounded-3xl p-7 ${color}`}>

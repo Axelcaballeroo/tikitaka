@@ -18,9 +18,9 @@ const load = (path, deps = {}, env = {}) => {
 };
 const dashboard = load("src/lib/provider-dashboard.ts");
 const plans = load("src/lib/plans.ts",{"./commercial-contact":load("src/lib/commercial-contact.ts",{},{NEXT_PUBLIC_TIKITAKA_EMAIL:"contact@example.test"})});
-test("Plan actual depende solo de featured, nunca de verified ni PRO", () => {
-  assert.equal(plans.currentPlan(false), "Tiki Taka Básico");
-  assert.equal(plans.currentPlan(true), "Tiki Taka Destacado");
+test("Plan actual depende solo de featured, nunca de verified; los nombres comerciales no cambian el flag", () => {
+  assert.equal(plans.currentPlan(false), "Tiki Taka Gratis");
+  assert.equal(plans.currentPlan(true), "Tiki Taka PRO");
   assert.match(
     plans.planContact("PRO", "Negocio & QA"),
     /^mailto:contact@example.test\?/,
