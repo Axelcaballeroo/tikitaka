@@ -1,3 +1,4 @@
+import { parseRole, roleHome, canAccessRolePath } from "@/lib/auth/roles";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -7,9 +8,9 @@ export async function middleware(request: NextRequest) {
   const supabase = createServerClient(url, key, { cookies: { getAll: () => request.cookies.getAll(), setAll: (items) => { items.forEach(({ name, value }) => request.cookies.set(name, value)); response = NextResponse.next({ request }); items.forEach(({ name, value, options }) => response.cookies.set(name, value, options)); } } });
   const { data: { user } } = await supabase.auth.getUser(); const pathname = request.nextUrl.pathname;
   if (!user) { const login = new URL("/login", request.url); login.searchParams.set("next", pathname); return NextResponse.redirect(login); }
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(); const role = profile?.role === "admin" ? "admin" : "provider";
-  if (pathname.startsWith("/admin") && role !== "admin") return NextResponse.redirect(new URL("/dashboard", request.url));
-  if (pathname.startsWith("/dashboard") && role === "admin") return NextResponse.redirect(new URL("/admin", request.url));
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(); const role = parseRole(profile?.role);
+  if (!role) return NextResponse.redirect(new URL("/login?error=profile", request.url));
+  if (!canAccessRolePath(role, pathname)) return NextResponse.redirect(new URL(roleHome(role), request.url));
   return response;
 }
-export const config = { matcher: ["/dashboard/:path*", "/admin/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/admin/:path*", "/cuenta/:path*"] };

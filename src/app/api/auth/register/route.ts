@@ -1,144 +1,37 @@
-import { validGeography } from "@/lib/geography";
 import { getSiteUrl } from "@/lib/site-url";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { slugify } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    if (!body || typeof body !== "object" || Array.isArray(body))
-      return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
-    const required = [
-      "fullName",
-      "email",
-      "password",
-      "businessName",
-      "categorySlug",
-      "zone",
-      "city",
-      "whatsapp",
-    ];
-    if (
-      required.some(
-        (field) => typeof body[field] !== "string" || !body[field].trim(),
-      )
-    )
-      return NextResponse.json(
-        { error: "Completá todos los campos." },
-        { status: 400 },
-      );
-    if (!validGeography(body.zone, body.city)) return NextResponse.json({ error: "Seleccioná una zona y localidad válidas." }, { status: 400 });
-    if (body.password.length < 6)
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 6 caracteres." },
-        { status: 400 },
-      );
+    if (!body || !["provider", "customer"].includes(body.accountType)
+      || ["fullName", "email", "password"].some(key => typeof body[key] !== "string" || !body[key].trim())
+      || body.fullName.trim().length > 120 || body.email.length > 254
+      || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim()) || body.password.length < 6 || body.password.length > 128) {
+      return NextResponse.json({ error: "Revisá el tipo de cuenta, nombre, email y contraseña (mínimo 6 caracteres)." }, { status: 400 });
+    }
+    if (body.accountType === "customer" && process.env.CUSTOMER_ACCOUNTS_ENABLED !== "true")
+      return NextResponse.json({ error: "Las cuentas de familia estarán disponibles pronto. Mientras tanto, podés explorar y guardar favoritos." }, { status: 503 });
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const admin = createAdminClient();
-    if (!url || !anon || !admin)
-      return NextResponse.json(
-        { error: "Supabase Auth no está configurado." },
-        { status: 503 },
-      );
-    const { data: category, error: categoryError } = await admin
-      .from("categories")
-      .select("id")
-      .eq("slug", body.categorySlug)
-      .eq("active", true)
-      .maybeSingle();
-    if (categoryError) throw categoryError;
-    if (!category)
-      return NextResponse.json(
-        { error: "Elegí una categoría disponible." },
-        { status: 400 },
-      );
+    if (!url || !anon || !admin) return NextResponse.json({ error: "El registro no está disponible." }, { status: 503 });
     const auth = createClient(url, anon, { auth: { persistSession: false } });
-    const { data: signup, error: authError } = await auth.auth.signUp({
-      email: body.email.trim(),
-      password: body.password,
-      options: {
-        emailRedirectTo: `${getSiteUrl()}/login?next=%2Fpublicar`,
-        data: { full_name: body.fullName.trim(), role: "provider" },
-      },
+    const { data, error } = await auth.auth.signUp({
+      email: body.email.trim(), password: body.password,
+      options: { emailRedirectTo: `${getSiteUrl()}/login${body.accountType === "provider" ? "?next=%2Fpublicar" : ""}`,
+        data: { full_name: body.fullName.trim(), account_type: body.accountType } },
     });
-    if (authError || !signup.user)
-      return NextResponse.json(
-        { error: authError?.message ?? "No se pudo crear el usuario." },
-        { status: 400 },
-      );
-    if (signup.user.identities?.length === 0)
-      return NextResponse.json(
-        { error: "Ya existe una cuenta con ese email." },
-        { status: 409 },
-      );
-    let slug = slugify(body.businessName);
-    let suffix = 2;
-    while (
-      (
-        await admin
-          .from("providers")
-          .select("id")
-          .eq("slug", slug)
-          .maybeSingle()
-      ).data
-    )
-      slug = `${slugify(body.businessName)}-${suffix++}`;
-    const { error: profileError } = await admin
-      .from("profiles")
-      .upsert({
-        id: signup.user.id,
-        email: body.email.trim(),
-        full_name: body.fullName.trim(),
-        role: "provider",
-      });
-    if (profileError) throw profileError;
-    const { error: providerError } = await admin
-      .from("providers")
-      .insert({
-        user_id: signup.user.id,
-        category_id: category?.id ?? null,
-        business_name: body.businessName.trim(),
-        slug,
-        zone: body.zone.trim(),
-        whatsapp: body.whatsapp.trim(),
-        email: body.email.trim(),
-        city: body.city.trim(),
-        province: "Buenos Aires",
-        status: "pending",
-        published: false,
-        verified: false,
-        featured: false,
-        schedule: "Horarios a coordinar",
-        coverage: body.zone.trim(),
-      });
-    if (providerError) {
-      console.error(
-        "[Tiki Taka] Cuenta creada sin completar proveedor",
-        providerError.code,
-      );
-      return NextResponse.json(
-        {
-          error:
-            "La cuenta se creó, pero no pudimos completar tu perfil. Confirmá tu email, iniciá sesión y continuá desde Publicar mi servicio.",
-        },
-        { status: 503 },
-      );
-    }
-    return NextResponse.json({
-      ok: true,
-      requiresEmailConfirmation: !signup.session,
-    });
-  } catch (error) {
-    console.error("[Tiki Taka] Error de registro:", error);
-    return NextResponse.json(
-      {
-        error:
-          "No se pudo completar el registro. Si la cuenta ya se creó, confirmá tu email e iniciá sesión para continuar.",
-      },
-      { status: 500 },
-    );
+    if (error || !data.user) return NextResponse.json({ error: "No pudimos crear la cuenta. Revisá tus datos o intentá iniciar sesión." }, { status: 400 });
+    if (data.user.identities?.length === 0) return NextResponse.json({ error: "Revisá tu email o iniciá sesión para continuar." }, { status: 409 });
+    // Profile creation belongs to the Auth trigger, atomically. Never overwrite roles.
+    const { data: profile, error: profileError } = await admin.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+    if (profileError || profile?.role !== body.accountType)
+      return NextResponse.json({ error: "La cuenta necesita revisión antes de continuar. Contactá a Tiki Taka." }, { status: 503 });
+    return NextResponse.json({ ok: true, requiresEmailConfirmation: !data.session });
+  } catch {
+    return NextResponse.json({ error: "No pudimos completar el registro. Revisá tu email antes de reintentar." }, { status: 400 });
   }
 }

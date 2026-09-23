@@ -31,6 +31,8 @@ async function getContext(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("No autorizado");
+  const { data: profile, error: roleError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (roleError || profile?.role !== "provider") throw new Error("No autorizado");
   const { data: provider } = await supabase
     .from("providers")
     .select("id,cover_image,logo")

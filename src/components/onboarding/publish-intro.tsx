@@ -49,7 +49,7 @@ export function PublishIntro() {
                 una.
               </p>
               <div className="flex flex-wrap gap-3">
-                <ButtonLink href="/registro?next=%2Fpublicar">
+                <ButtonLink href="/registro?tipo=provider&next=%2Fpublicar">
                   Crear cuenta y publicar →
                 </ButtonLink>
                 <ButtonLink href="/login?next=%2Fpublicar" variant="secondary">

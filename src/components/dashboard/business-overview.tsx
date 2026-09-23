@@ -15,10 +15,10 @@ export function MissingProvider() {
     <section className="rounded-3xl bg-white p-7">
       <h1 className="display text-3xl">Empezá tu perfil en Tiki Taka</h1>
       <p className="mt-4 text-sm text-muted">
-        Completá tu propuesta para que el equipo pueda revisarla.
+        Terminá de crear tu perfil para empezar a aparecer en Tiki Taka.
       </p>
       <Link href="/publicar" className="onb-primary mt-6">
-        Publicar mi servicio
+        Completar mi perfil
       </Link>
     </section>
   );

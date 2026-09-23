@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { createAuthServerClient } from "@/lib/supabase/auth-server";
+import { requireRole } from "./profile";
 
 export type AccountProvider = {
   id: string;
@@ -37,6 +38,7 @@ export type AccountService = {
 export type AccountImage = { id: string; imageUrl: string; sortOrder: number };
 
 export async function requireAccount() {
+  await requireRole("provider");
   const supabase = await createAuthServerClient();
   if (!supabase) redirect("/login?error=config");
   const {
@@ -82,6 +84,28 @@ export async function requireAccount() {
         categoryName: row.categories?.name ?? "Sin categoría",
       }
     : null;
+  return { supabase, user, provider };
+}
+
+export async function requireProviderApiAccount() {
+  const supabase = await createAuthServerClient();
+  if (!supabase) throw new Error("No autorizado");
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autorizado");
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profileError || profile?.role !== "provider") throw new Error("No autorizado");
+  const { data, error } = await supabase.from("providers").select("*,categories(name)").eq("user_id", user.id).maybeSingle();
+  if (error) throw error;
+  const row = data as (Record<string, unknown> & { categories: { name: string } | null }) | null;
+  const provider: AccountProvider | null = row ? {
+    id: String(row.id), userId: user.id, categoryId: row.category_id ? String(row.category_id) : null,
+    businessName: String(row.business_name ?? ""), slug: String(row.slug ?? ""), description: String(row.description ?? ""),
+    zone: String(row.zone ?? ""), city: String(row.city ?? ""), province: String(row.province ?? ""), address: String(row.address ?? ""),
+    whatsapp: String(row.whatsapp ?? ""), email: String(row.email ?? user.email ?? ""), priceFrom: Number(row.price_from ?? 0),
+    rating: Number(row.rating ?? 0), reviewsCount: Number(row.reviews_count ?? 0), verified: Boolean(row.verified), featured: Boolean(row.featured),
+    published: Boolean(row.published), status: (row.status as AccountProvider["status"]) ?? "pending", coverImage: String(row.cover_image ?? ""),
+    logo: String(row.logo ?? ""), schedule: String(row.schedule ?? ""), coverage: String(row.coverage ?? ""), categoryName: row.categories?.name ?? "Sin categoría",
+  } : null;
   return { supabase, user, provider };
 }
 

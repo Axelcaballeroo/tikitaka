@@ -8,8 +8,9 @@ test.beforeEach(async ({ baseURL }) => {
 const profiles = {
   admin: { fullName: "Camila Pérez", role: "admin", email: "camila@example.test", avatarUrl: null, hasProvider: false },
   provider: { fullName: "Juliana Gómez", role: "provider", email: "juliana@example.test", avatarUrl: null, hasProvider: true },
+  customer: { fullName: "Axel Familia", role: "customer", email: "axel@example.test", avatarUrl: null, hasProvider: false },
 };
-for (const state of ["anonymous", "admin", "provider"] as const) {
+for (const state of ["anonymous", "admin", "provider", "customer"] as const) {
   test(`Premium ${state}: 375/430/768/1024/1440, keyboard, outside and stable navbar`, async ({ page, baseURL }) => {
     expect(baseURL).toMatch(/^http:\/\/(localhost|127\.0\.0\.1):3101$/);
     await page.route("**/api/auth/session", route => route.fulfill({ json: { account: state === "anonymous" ? null : profiles[state] } }));
@@ -27,8 +28,8 @@ for (const state of ["anonymous", "admin", "provider"] as const) {
           await expect(header.getByRole("link", { name: "Publicá tu servicio", exact: true })).toBeVisible();
         }
       } else {
-        const name = state === "admin" ? "Camila" : "Juliana";
-        const role = state === "admin" ? "Administradora" : "Proveedor";
+        const name = state === "admin" ? "Camila" : state === "provider" ? "Juliana" : "Axel";
+        const role = state === "admin" ? "Administradora" : state === "provider" ? "Proveedor" : "Mi cuenta";
         const trigger = header.getByRole("button", { name: `Hola, ${name}, ${role}` });
         await expect(trigger).toBeVisible();
         await expect(trigger.locator(".account-avatar")).toHaveText(name[0]);
@@ -44,6 +45,11 @@ for (const state of ["anonymous", "admin", "provider"] as const) {
         await expect(page.locator(".account-summary .account-role")).toHaveText(role);
         await expect(page.locator(".account-email")).toHaveText(profiles[state].email);
         if (state === "provider") await expect(menu.getByRole("menuitem", { name: "Ver mi publicación" })).toBeVisible();
+        if (state === "customer") {
+          await expect(menu.getByRole("menuitem", { name: "Mi cuenta", exact: true })).toBeVisible();
+          await expect(menu.getByRole("menuitem", { name: "Mis favoritos", exact: true })).toBeVisible();
+          await expect(menu.getByText("Mi panel", { exact: true })).toHaveCount(0);
+        }
         await page.waitForTimeout(220);
         const box = (await page.locator(".account-dropdown").boundingBox())!;
         expect(box.x).toBeGreaterThanOrEqual(0); expect(box.x + box.width).toBeLessThanOrEqual(width);

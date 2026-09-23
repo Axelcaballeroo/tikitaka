@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAuthServerClient } from "@/lib/supabase/auth-server";
 import { safeAccountAvatar } from "@/lib/account-menu";
+import { parseRole } from "@/lib/auth/roles";
 
 export const dynamic = "force-dynamic";
 export async function GET() {
@@ -12,7 +13,8 @@ export async function GET() {
     if (!user) return NextResponse.json({ account: null }, { headers });
     const { data, error } = await db.from("profiles").select("full_name,role").eq("id", user.id).maybeSingle();
     if (error) throw error;
-    const role = data?.role === "admin" ? "admin" : "provider";
+    const role = parseRole(data?.role);
+    if (!role) return NextResponse.json({ account: null }, { status: 403, headers });
     let avatarUrl: string | null = null;
     let hasProvider = false;
     if (role === "provider") {

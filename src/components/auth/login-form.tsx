@@ -2,19 +2,20 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { safeReturnPath } from "@/lib/onboarding";
 import { createBrowserClient } from "@/lib/supabase/client";
 
 export function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(
     params.get("error") === "config"
       ? "Supabase Auth todavía no está configurado."
-      : "",
+      : params.get("error") === "profile"
+        ? "No pudimos verificar el tipo de cuenta. Contactá a Tiki Taka."
+        : "",
   );
   const [busy, setBusy] = useState(false);
   const submit = async (event: FormEvent) => {
@@ -27,25 +28,14 @@ export function LoginForm() {
       setBusy(false);
       return;
     }
-    const { data: authData, error: authError } =
+    const { error: authError } =
       await supabase.auth.signInWithPassword({ email, password });
     if (authError) {
       setError("Email o contraseña incorrectos.");
       setBusy(false);
       return;
     }
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", authData.user.id)
-      .maybeSingle();
-    const destination = profile?.role === "admin" ? "/admin" : "/dashboard";
-    router.push(
-      profile?.role === "admin"
-        ? destination
-        : safeReturnPath(params.get("next"), destination),
-    );
-    router.refresh();
+    window.location.assign(`/auth/continuar?next=${encodeURIComponent(safeReturnPath(params.get("next"), "/"))}`);
   };
   return (
     <form
@@ -54,7 +44,7 @@ export function LoginForm() {
     >
       <h1 className="display text-4xl font-semibold">Ingresá a tu cuenta</h1>
       <p className="mt-3 text-sm text-muted">
-        Gestioná el perfil de tu servicio en Tiki Taka.
+        Volvé a tu espacio en Tiki Taka.
       </p>
       {error && (
         <p
@@ -93,7 +83,7 @@ export function LoginForm() {
       <p className="mt-6 text-center text-sm text-muted">
         ¿Todavía no tenés cuenta?{" "}
         <Link
-          href={`/registro?next=${encodeURIComponent(safeReturnPath(params.get("next")))}`}
+          href={`/registro?next=${encodeURIComponent(safeReturnPath(params.get("next"), "/"))}`}
           className="font-extrabold text-brand"
         >
           Registrate

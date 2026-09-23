@@ -1,27 +1,21 @@
-import { safeReturnPath } from "@/lib/onboarding";
 import type { Metadata } from "next";
 import { RegisterForm } from "@/components/auth/register-form";
-import { getCategories } from "@/lib/data/categories";
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
-  title: "Registro de proveedor",
+  title: "Crear cuenta",
 };
 export const dynamic = "force-dynamic";
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; tipo?: string }>;
 }) {
   const params = await searchParams;
-  const nextPath = safeReturnPath(
-    typeof params.next === "string" ? params.next : null,
-    "/publicar",
-  );
-  const categories = await getCategories();
+  const initialType = params.tipo === "provider" || params.next === "/publicar" ? "provider" : params.tipo === "customer" ? "customer" : null;
   return (
     <section className="container-page py-16">
       <div className="mx-auto max-w-3xl">
-        <RegisterForm categories={categories} nextPath={nextPath} />
+        <RegisterForm initialType={initialType} customerEnabled={process.env.CUSTOMER_ACCOUNTS_ENABLED === "true"} />
       </div>
     </section>
   );

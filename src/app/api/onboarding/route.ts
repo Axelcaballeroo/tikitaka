@@ -31,9 +31,9 @@ async function context() {
     .maybeSingle();
   if (roleError)
     throw new OnboardingError("No pudimos verificar tu cuenta.", 503);
-  if (role?.role === "admin")
+  if (role?.role !== "provider")
     throw new OnboardingError(
-      "Administrá los proveedores desde tu panel.",
+      "Esta acción requiere una cuenta de proveedor.",
       403,
     );
   const { data: provider, error: providerError } = await supabase

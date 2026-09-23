@@ -35,7 +35,6 @@ export function HeroSearch({
         </p>
       </div>
       <div className="home-hero-photo relative">
-        <span aria-hidden className="hero-spark">✳</span>
         <div className="hero-photo-frame"><Image
           src="/gordo.jpeg"
           alt="Un bebé sonriente jugando en casa"
@@ -44,10 +43,6 @@ export function HeroSearch({
           sizes="(max-width: 767px) 100vw, (max-width: 1023px) 48vw, 560px"
           className="hero-baby object-cover"
         />
-        </div>
-        <div className="hero-photo-note">
-          Más tiempo para <span className="text-brand">estar juntos.</span>{" "}
-          <span aria-hidden>♡</span>
         </div>
       </div>
       <div className="home-hero-search">

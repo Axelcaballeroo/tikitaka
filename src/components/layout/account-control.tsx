@@ -28,6 +28,7 @@ function AccountAvatar({ account }: { account: NavbarAccount }) {
   </span>;
 }
 const linkIcons: Record<string, IconName> = {
+  "/cuenta": "user", "/favoritos": "store",
   "/admin": "dashboard", "/admin/configuracion": "settings", "/servicios": "store",
   "/dashboard": "dashboard", "/dashboard/perfil": "user", "/dashboard/vista-publica": "external",
 };
