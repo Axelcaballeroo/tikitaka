@@ -4,6 +4,7 @@ export type NavbarAccount = {
   email?: string;
   avatarUrl?: string | null;
   hasProvider?: boolean;
+  providerPublished?: boolean;
 };
 export function accountFirstName(account: NavbarAccount) {
   const name = account.fullName.trim();
@@ -13,12 +14,11 @@ export function accountLabel(account: NavbarAccount) {
   const first = accountFirstName(account);
   return first ? `Hola, ${first}` : "Mi cuenta";
 }
-export const accountRoleLabel = (role: NavbarAccount["role"]) => ({ admin: "Administradora", provider: "Proveedor", customer: "Mi cuenta" })[role];
-export function accountLinks(role: NavbarAccount["role"], hasProvider = false) {
-  if (role === "customer") return [["Mi cuenta", "/cuenta"], ["Mis favoritos", "/favoritos"]];
+export const accountRoleLabel = (role: NavbarAccount["role"], hasProvider = false) => role === "admin" ? "Administradora" : hasProvider ? "Familia y proveedor" : "Mi cuenta";
+export function accountLinks(role: NavbarAccount["role"], hasProvider = false, providerPublished = false) {
   return role === "admin"
     ? [["Camila OS", "/admin"], ["Configuración", "/admin/configuracion"], ["Volver al marketplace", "/servicios"]]
-    : [["Mi panel", "/dashboard"], ["Mi perfil", "/dashboard/perfil"], ...(hasProvider ? [["Ver mi publicación", "/dashboard/vista-publica"]] : [])];
+    : [["Mi cuenta", "/cuenta"], ["Mis favoritos", "/favoritos"], ...(hasProvider ? [["Mi negocio", "/dashboard"], ["Mi panel", "/dashboard/estadisticas"], ["Editar mi servicio", "/dashboard/perfil"], ...(providerPublished ? [["Ver mi publicación", "/dashboard/vista-publica"]] : [])] : [["Publicar mi servicio", "/publicar"]])];
 }
 // Existing image sources only. Never return arbitrary tracking or authenticated URLs.
 export function safeAccountAvatar(value: unknown, storageUrl?: string) {

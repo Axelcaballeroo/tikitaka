@@ -1,7 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { createAuthServerClient } from "@/lib/supabase/auth-server";
-import { requireRole } from "./profile";
 
 export type AccountProvider = {
   id: string;
@@ -38,7 +37,6 @@ export type AccountService = {
 export type AccountImage = { id: string; imageUrl: string; sortOrder: number };
 
 export async function requireAccount() {
-  await requireRole("provider");
   const supabase = await createAuthServerClient();
   if (!supabase) redirect("/login?error=config");
   const {
@@ -84,6 +82,7 @@ export async function requireAccount() {
         categoryName: row.categories?.name ?? "Sin categoría",
       }
     : null;
+  if (!provider) redirect("/publicar");
   return { supabase, user, provider };
 }
 
@@ -93,7 +92,7 @@ export async function requireProviderApiAccount() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No autorizado");
   const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profileError || profile?.role !== "provider") throw new Error("No autorizado");
+  if (profileError || profile?.role === "admin" || !["provider", "customer"].includes(String(profile?.role))) throw new Error("No autorizado");
   const { data, error } = await supabase.from("providers").select("*,categories(name)").eq("user_id", user.id).maybeSingle();
   if (error) throw error;
   const row = data as (Record<string, unknown> & { categories: { name: string } | null }) | null;

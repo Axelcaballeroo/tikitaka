@@ -31,9 +31,9 @@ async function context() {
     .maybeSingle();
   if (roleError)
     throw new OnboardingError("No pudimos verificar tu cuenta.", 503);
-  if (role?.role !== "provider")
+  if (!["provider", "customer"].includes(String(role?.role)))
     throw new OnboardingError(
-      "Esta acción requiere una cuenta de proveedor.",
+      "Esta cuenta no puede publicar servicios.",
       403,
     );
   const { data: provider, error: providerError } = await supabase

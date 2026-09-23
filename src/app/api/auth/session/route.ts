@@ -17,17 +17,19 @@ export async function GET() {
     if (!role) return NextResponse.json({ account: null }, { status: 403, headers });
     let avatarUrl: string | null = null;
     let hasProvider = false;
-    if (role === "provider") {
+    let providerPublished = false;
+    if (role !== "admin") {
       const { data: provider, error: providerError } = await db.from("providers")
-        .select("id,logo,cover_image").eq("user_id", user.id).maybeSingle();
+        .select("id,logo,cover_image,published,status").eq("user_id", user.id).maybeSingle();
       if (!providerError && provider) {
         hasProvider = true;
+        providerPublished = provider.published === true && provider.status === "approved";
         avatarUrl = safeAccountAvatar(provider.logo, process.env.NEXT_PUBLIC_SUPABASE_URL)
           ?? safeAccountAvatar(provider.cover_image, process.env.NEXT_PUBLIC_SUPABASE_URL);
       }
     }
     return NextResponse.json({ account: { fullName: data?.full_name ?? "", role,
-      email: user.email ?? "", avatarUrl, hasProvider } }, { headers });
+      email: user.email ?? "", avatarUrl, hasProvider, providerPublished } }, { headers });
   } catch {
     return NextResponse.json({ account: null }, { status: 503, headers });
   }

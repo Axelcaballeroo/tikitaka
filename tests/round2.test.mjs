@@ -13,6 +13,7 @@ const geo = load("src/lib/geography.ts");
 const search = load("src/lib/provider-search.ts", { "@/lib/geography": geo });
 const menu = load("src/lib/account-menu.ts");
 const roles = load("src/lib/auth/roles.ts");
+const signupErrors = load("src/lib/auth/signup-error.ts");
 const json = (data, init = {}) => ({ data, status: init.status ?? 200, headers: init.headers });
 test("Suggestions only use supplied real labels, deduplicate and cap at six", () => {
   const providers = Array.from({length:10},(_,i)=>({name:`Salón ${i}`,category:"Salones",services:["Salón de fiestas"],serviceDetails:[{title:"Salón de fiestas",description:"No es una sugerencia"}]}));
@@ -57,7 +58,7 @@ test("Provider cannot read another provider's services or images", async () => {
       }}) };
     },
   };
-  const account=load("src/lib/auth/account.ts",{"server-only":{},"next/navigation":{redirect:()=>{throw Error("redirect");}},"@/lib/supabase/auth-server":{createAuthServerClient:async()=>db},"./profile":{requireRole:async()=>({role:"provider"})}});
+  const account=load("src/lib/auth/account.ts",{"server-only":{},"next/navigation":{redirect:()=>{throw Error("redirect");}},"@/lib/supabase/auth-server":{createAuthServerClient:async()=>db}});
   await assert.rejects(account.getAccountServices("provider-b"),/No autorizado/);
   await assert.rejects(account.getAccountImages("provider-b"),/No autorizado/);
   assert.deepEqual(calls,["providers","providers"]);
@@ -65,7 +66,7 @@ test("Provider cannot read another provider's services or images", async () => {
 function registerHarness() {
   let signups=0, metadata;
   const admin={from:()=>({select:()=>({eq(){return this;},maybeSingle:async()=>({data:{role:metadata?.account_type},error:null})})})};
-  const route=load("src/app/api/auth/register/route.ts",{"next/server":{NextResponse:{json}},"@/lib/site-url":{getSiteUrl:()=>"https://example.test"},"@/lib/supabase/admin":{createAdminClient:()=>admin},"@supabase/supabase-js":{createClient:()=>({auth:{signUp:async input=>{signups++;metadata=input.options.data;return {data:{user:{id:"verified-signup-id",identities:[{}]},session:null},error:null};}}})}}, {process:{env:{NEXT_PUBLIC_SUPABASE_URL:"http://localhost",NEXT_PUBLIC_SUPABASE_ANON_KEY:"test-only"}}});
+  const route=load("src/app/api/auth/register/route.ts",{"next/server":{NextResponse:{json}},"@/lib/site-url":{getSiteUrl:()=>"https://example.test"},"@/lib/supabase/admin":{createAdminClient:()=>admin},"@/lib/auth/signup-error":signupErrors,"@supabase/supabase-js":{createClient:()=>({auth:{signUp:async input=>{signups++;metadata=input.options.data;return {data:{user:{id:"verified-signup-id",identities:[{}]},session:null},error:null};}}})}}, {process:{env:{NEXT_PUBLIC_SUPABASE_URL:"http://localhost",NEXT_PUBLIC_SUPABASE_ANON_KEY:"test-only"}}});
   return {route,signups:()=>signups,metadata:()=>metadata};
 }
 const registration={accountType:"provider",fullName:"QA",email:"qa@example.test",password:"test-input-only"};
@@ -75,11 +76,16 @@ test("Register rejects invalid account type before creating any Auth user", asyn
 test("Provider registration sends a fixed account type and creates no provider before onboarding", async () => {
   const h=registerHarness();const r=await h.route.POST({json:async()=>({...registration,role:"admin",published:true})});assert.equal(r.status,200);assert.equal(h.metadata().account_type,"provider");assert.equal(h.signups(),1);
 });
-test("Server middleware protects role destinations and anonymous redirects", async () => {
-  for(const [user,role,path,destination] of [[null,null,"/admin","/login"],[{id:"a"},"provider","/admin","/dashboard"],[{id:"a"},"admin","/dashboard","/admin"],[{id:"a"},"customer","/dashboard","/cuenta"],[{id:"a"},"customer","/admin","/cuenta"],[{id:"a"},"provider","/cuenta","/dashboard"]]){
-    const db={auth:{getUser:async()=>({data:{user}})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{role}})})})})};
+test("Signup errors distinguish duplicate email and mail rate limits without exposing internals", () => {
+  assert.equal(JSON.stringify(signupErrors.signupFailure({code:"user_already_exists",status:422})),JSON.stringify({status:409,code:"email_exists",message:"Ese email ya tiene una cuenta. Iniciá sesión para continuar."}));
+  assert.equal(signupErrors.signupFailure({code:"over_email_send_rate_limit",status:429}).code,"rate_limited");
+  assert.equal(signupErrors.signupFailure({code:"unexpected_failure",status:500}).status,503);
+});
+test("Server middleware protects admin and derives business access from ownership", async () => {
+  for(const [user,role,path,ownsProvider,destination] of [[null,null,"/admin",false,"/login"],[{id:"a"},"provider","/admin",true,"/cuenta"],[{id:"a"},"admin","/dashboard",false,"/admin"],[{id:"a"},"customer","/dashboard",false,"/publicar"],[{id:"a"},"customer","/admin",false,"/cuenta"],[{id:"a"},"customer","/dashboard",true,null],[{id:"a"},"provider","/cuenta",true,null]]){
+    const db={auth:{getUser:async()=>({data:{user}})},from:table=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:table==="profiles"?{role}:ownsProvider?{id:"provider-a"}:null})})})})};
     const route=load("src/middleware.ts",{"@supabase/ssr":{createServerClient:()=>db},"next/server":{NextResponse:{next:()=>({}),redirect:url=>url}},"@/lib/auth/roles":roles},{process:{env:{NEXT_PUBLIC_SUPABASE_URL:"http://localhost",NEXT_PUBLIC_SUPABASE_ANON_KEY:"test-only"}}});
-    const result=await route.middleware({url:"https://example.test"+path,nextUrl:{pathname:path},cookies:{getAll:()=>[]}});assert.equal(result.pathname,destination);
+    const result=await route.middleware({url:"https://example.test"+path,nextUrl:{pathname:path},cookies:{getAll:()=>[]}});assert.equal(result.pathname??null,destination);
   }
 });
 test("Premium account rejects invalid names and hides publication without an owned provider", () => {
@@ -88,11 +94,12 @@ test("Premium account rejects invalid names and hides publication without an own
   }
   assert.equal(menu.accountFirstName({fullName:"  Juliana Pérez ",role:"provider"}),"Juliana");
   assert.equal(menu.accountRoleLabel("admin"),"Administradora");
-  assert.equal(menu.accountRoleLabel("provider"),"Proveedor");
+  assert.equal(menu.accountRoleLabel("provider"),"Mi cuenta");
+  assert.equal(menu.accountRoleLabel("customer",true),"Familia y proveedor");
   assert.equal(menu.accountRoleLabel("customer"),"Mi cuenta");
-  assert.deepEqual(Array.from(menu.accountLinks("customer"), item => Array.from(item)), [["Mi cuenta","/cuenta"],["Mis favoritos","/favoritos"]]);
-  assert(!menu.accountLinks("provider",false).some(([,url])=>url.includes("vista-publica")));
-  assert(menu.accountLinks("provider",true).some(([,url])=>url==="/dashboard/vista-publica"));
+  assert.deepEqual(Array.from(menu.accountLinks("customer"), item => Array.from(item)), [["Mi cuenta","/cuenta"],["Mis favoritos","/favoritos"],["Publicar mi servicio","/publicar"]]);
+  assert(menu.accountLinks("provider",false).some(([,url])=>url==="/publicar"));
+  assert(menu.accountLinks("customer",true).some(([,url])=>url==="/dashboard"));
 });
 test("Hero uses the delivered JPEG without the floating note or doodle", () => {
   const hero=fs.readFileSync("src/components/home/hero-search.tsx","utf8");

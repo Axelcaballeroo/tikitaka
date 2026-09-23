@@ -21,13 +21,6 @@ export default async function PublishPage() {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
-  if (profile?.role === "customer") return <section className="container-page py-16"><div className="mx-auto max-w-xl rounded-[2rem] bg-white p-8 soft-shadow">
-    <p className="home-eyebrow">Un nuevo proyecto</p><h1 className="display mt-3 text-3xl">¿Querés publicar tu servicio?</h1>
-    <p className="mt-4 text-muted">Tu cuenta actual es de familia. Para publicar, podés crear una cuenta de proveedor con otro email y completar tu perfil.</p>
-    <p className="mt-3 text-sm text-muted">Tu cuenta de familia se conserva. Primero cerrá esta sesión y elegí “Soy proveedor” en el registro.</p>
-    <a href="/logout" className="onb-primary mt-6">Cerrar sesión para crear cuenta proveedor</a>
-    <Link href="/cuenta" className="mt-5 block font-bold text-brand">Volver a mi cuenta</Link>
-  </div></section>;
   if (profile?.role === "admin")
     return (
       <section className="container-page py-16">
@@ -41,7 +34,7 @@ export default async function PublishPage() {
         </div>
       </section>
     );
-  if (profile?.role !== "provider") redirect("/login?error=profile");
+  if (!profile || !["provider", "customer"].includes(profile.role)) redirect("/login?error=profile");
   const { data: provider, error } = await supabase!.from("providers").select("id").eq("user_id", user.id).maybeSingle();
   if (error) throw new Error("No pudimos cargar tu publicación.");
   if (provider) redirect("/dashboard");

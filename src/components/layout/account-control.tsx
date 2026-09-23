@@ -31,6 +31,7 @@ const linkIcons: Record<string, IconName> = {
   "/cuenta": "user", "/favoritos": "store",
   "/admin": "dashboard", "/admin/configuracion": "settings", "/servicios": "store",
   "/dashboard": "dashboard", "/dashboard/perfil": "user", "/dashboard/vista-publica": "external",
+  "/dashboard/estadisticas": "dashboard", "/publicar": "store",
 };
 
 export function AccountControl() {
@@ -74,17 +75,17 @@ export function AccountControl() {
   return <div ref={root} className="account-control" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }} onKeyDown={e => {
     if (e.key === "Escape") { e.preventDefault(); setOpen(false); trigger.current?.focus(); }
   }}>
-    <button ref={trigger} type="button" className="account-trigger" aria-label={`${accountLabel(account)}, ${accountRoleLabel(account.role)}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? "account-links" : undefined} onClick={() => { entryFocus.current = 0; setOpen(!open); }} onKeyDown={e => {
+    <button ref={trigger} type="button" className="account-trigger" aria-label={`${accountLabel(account)}, ${accountRoleLabel(account.role, account.hasProvider)}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? "account-links" : undefined} onClick={() => { entryFocus.current = 0; setOpen(!open); }} onKeyDown={e => {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); entryFocus.current = e.key === "ArrowUp" ? -1 : 0; setOpen(true); }
     }}>
       <AccountAvatar account={account} />
-      <span className="account-copy"><span className="account-name">{accountLabel(account)}</span><span className="account-role">{accountRoleLabel(account.role)}</span></span>
+      <span className="account-copy"><span className="account-name">{accountLabel(account)}</span><span className="account-role">{accountRoleLabel(account.role, account.hasProvider)}</span></span>
       <span className="account-chevron"><AccountIcon name="chevron" /></span>
     </button>
     {open && <div className="account-dropdown">
       <div className="account-summary">
         <AccountAvatar account={account} />
-        <div className="account-summary-copy"><p className="account-summary-name">{accountFirstName(account) || "Mi cuenta"}</p><p className="account-role">{accountRoleLabel(account.role)}</p></div>
+        <div className="account-summary-copy"><p className="account-summary-name">{accountFirstName(account) || "Mi cuenta"}</p><p className="account-role">{accountRoleLabel(account.role, account.hasProvider)}</p></div>
         {account.email && <p className="account-email">{account.email}</p>}
       </div>
       <nav ref={menu} id="account-links" role="menu" aria-label="Mi cuenta" onKeyDown={e => {
@@ -96,7 +97,7 @@ export function AccountControl() {
           items[next]?.focus();
         }
       }}>
-        {accountLinks(account.role, account.hasProvider).map(([label, href]) => <Link role="menuitem" tabIndex={-1} key={href} href={href} onClick={() => setOpen(false)}><AccountIcon name={linkIcons[href]} /><span>{label}</span></Link>)}
+        {accountLinks(account.role, account.hasProvider, account.providerPublished).map(([label, href]) => <Link role="menuitem" tabIndex={-1} key={href} href={href} onClick={() => setOpen(false)}><AccountIcon name={linkIcons[href]} /><span>{label}</span></Link>)}
         <div className="account-menu-divider" role="separator" />
         <a role="menuitem" tabIndex={-1} href="/logout" className="account-logout"><AccountIcon name="logout" /><span>Cerrar sesión</span></a>
       </nav>

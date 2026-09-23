@@ -29,7 +29,7 @@ for (const state of ["anonymous", "admin", "provider", "customer"] as const) {
         }
       } else {
         const name = state === "admin" ? "Camila" : state === "provider" ? "Juliana" : "Axel";
-        const role = state === "admin" ? "Administradora" : state === "provider" ? "Proveedor" : "Mi cuenta";
+        const role = state === "admin" ? "Administradora" : state === "provider" ? "Familia y proveedor" : "Mi cuenta";
         const trigger = header.getByRole("button", { name: `Hola, ${name}, ${role}` });
         await expect(trigger).toBeVisible();
         await expect(trigger.locator(".account-avatar")).toHaveText(name[0]);
@@ -44,7 +44,7 @@ for (const state of ["anonymous", "admin", "provider", "customer"] as const) {
         await expect(page.locator(".account-summary-name")).toHaveText(name);
         await expect(page.locator(".account-summary .account-role")).toHaveText(role);
         await expect(page.locator(".account-email")).toHaveText(profiles[state].email);
-        if (state === "provider") await expect(menu.getByRole("menuitem", { name: "Ver mi publicación" })).toBeVisible();
+        if (state === "provider") await expect(menu.getByRole("menuitem", { name: "Mi negocio" })).toBeVisible();
         if (state === "customer") {
           await expect(menu.getByRole("menuitem", { name: "Mi cuenta", exact: true })).toBeVisible();
           await expect(menu.getByRole("menuitem", { name: "Mis favoritos", exact: true })).toBeVisible();
@@ -70,10 +70,10 @@ test("Premium fallback: no full_name, no association, long name and broken image
   await page.route("**/api/auth/session", route => route.fulfill({ json: { account } }));
   await page.route("**/_next/image?*", route => new URL(route.request().url()).searchParams.get("url")?.includes("qa-avatar") ? route.fulfill({ status: 404, body: "" }) : route.continue());
   await page.goto("/");
-  const trigger = page.getByRole("button", { name: "Mi cuenta, Proveedor" });
+  const trigger = page.getByRole("button", { name: "Mi cuenta, Mi cuenta" });
   await expect(trigger.locator(".account-avatar")).toHaveText("TK");
   await trigger.click();
-  await expect(page.getByRole("menuitem", { name: "Ver mi publicación" })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Publicar mi servicio" })).toBeVisible();
   await expect(page.locator(".account-summary-name")).toHaveText("Mi cuenta");
   await page.screenshot({ path: ".qa-private/account-premium-no-name.png" });
   account = { ...account, fullName: "MaríadelosÁngelesExtraordinariamenteLargo Apellido", avatarUrl: "", email: "un-correo-muy-largo-para-verificar-el-ajuste@example.test" };

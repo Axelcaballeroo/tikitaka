@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { requireRole } from "@/lib/auth/profile";
+import { getCurrentUserProfile } from "@/lib/auth/profile";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { createAuthServerClient } from "@/lib/supabase/auth-server";
 import { accountFirstName } from "@/lib/account-menu";
 import { getProviders } from "@/lib/data/providers";
 import { FavoritesList } from "@/components/marketplace/favorites-list";
@@ -7,7 +10,11 @@ import { FavoritesList } from "@/components/marketplace/favorites-list";
 export const metadata: Metadata = { title: "Mi cuenta", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 export default async function AccountPage() {
-  const profile = await requireRole("customer");
+  const profile = await getCurrentUserProfile();
+  if (!profile) redirect("/login");
+  if (profile.role === "admin") redirect("/admin");
+  const supabase = await createAuthServerClient();
+  const { data: provider } = await supabase!.from("providers").select("id,business_name,status,published").eq("user_id", profile.id).maybeSingle();
   const providers = await getProviders();
   const first = accountFirstName({ fullName: profile.fullName, role: "customer" });
   return <section className="container-page py-10 md:py-16">
@@ -15,7 +22,7 @@ export default async function AccountPage() {
       <div className="rounded-[2rem] border border-brand/10 bg-mint p-6 sm:p-10">
         <p className="home-eyebrow">Tu espacio en Tiki Taka</p>
         <h1 className="display mt-3 text-4xl font-semibold">{first ? `Hola, ${first}` : "Hola"} 👋</h1>
-        <p className="mt-4 text-muted">Guardá tus favoritos y encontrá todo más rápido.</p>
+        <p className="mt-4 text-muted">Guardá tus favoritos y administrá tu cuenta desde un solo lugar.</p>
       </div>
       <section className="mt-6 rounded-[2rem] bg-white p-6 soft-shadow sm:p-8" aria-labelledby="personal-profile">
         <h2 id="personal-profile" className="text-xl font-extrabold">Mi perfil</h2>
@@ -24,9 +31,13 @@ export default async function AccountPage() {
           <div><dt className="text-sm text-muted">Email</dt><dd className="mt-1 break-all font-bold">{profile.email}</dd></div>
         </dl>
       </section>
+      <section className="mt-6 rounded-[2rem] bg-white p-6 soft-shadow sm:p-8" aria-labelledby="business-profile">
+        <h2 id="business-profile" className="text-xl font-extrabold">Mi negocio</h2>
+        {provider ? <><p className="mt-3 text-muted">{provider.business_name} · {provider.published && provider.status === "approved" ? "Publicado" : provider.status === "rejected" ? "Requiere cambios" : "En revisión"}</p><Link href="/dashboard" className="onb-primary mt-5">Administrar mi servicio</Link></> : <><p className="mt-3 text-muted">Usá esta misma cuenta para publicar un servicio. Tus favoritos y datos personales se conservan.</p><Link href="/publicar" className="onb-primary mt-5">Publicar mi servicio</Link></>}
+      </section>
       <section className="mt-10" aria-labelledby="personal-favorites">
         <h2 id="personal-favorites" className="display text-3xl font-semibold">Mis favoritos</h2>
-        <p className="mb-6 mt-2 text-sm text-muted">Guardados en este navegador. Por ahora no se sincronizan con tu cuenta ni entre dispositivos.</p>
+        <p className="mb-6 mt-2 text-sm text-muted">Sincronizados de forma privada con tu cuenta.</p>
         <FavoritesList providers={providers} emptyTitle="Aún no guardaste favoritos." />
       </section>
     </div>
