@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createAuthServerClient } from "@/lib/supabase/auth-server";
 
 export type AccountProvider = {
@@ -36,7 +37,7 @@ export type AccountService = {
 };
 export type AccountImage = { id: string; imageUrl: string; sortOrder: number };
 
-export async function requireAccount() {
+export const requireAccount = cache(async function requireAccount() {
   const supabase = await createAuthServerClient();
   if (!supabase) redirect("/login?error=config");
   const {
@@ -84,7 +85,7 @@ export async function requireAccount() {
     : null;
   if (!provider) redirect("/publicar");
   return { supabase, user, provider };
-}
+});
 
 export async function requireProviderApiAccount() {
   const supabase = await createAuthServerClient();

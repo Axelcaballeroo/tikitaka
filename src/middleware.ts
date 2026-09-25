@@ -14,8 +14,9 @@ export async function middleware(request: NextRequest) {
     if (role !== "admin") return NextResponse.redirect(new URL("/cuenta", request.url));
   } else if (role === "admin") return NextResponse.redirect(new URL("/admin", request.url));
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
-    const { data: provider } = await supabase.from("providers").select("id").eq("user_id", user.id).maybeSingle();
-    if (!provider) return NextResponse.redirect(new URL("/publicar", request.url));
+    const { data: provider, error: providerError } = await supabase.from("providers").select("id").eq("user_id", user.id).maybeSingle();
+    // A data failure is handled by the dashboard error boundary. It is not an auth failure.
+    if (!providerError && !provider) return NextResponse.redirect(new URL("/publicar", request.url));
   }
   return response;
 }

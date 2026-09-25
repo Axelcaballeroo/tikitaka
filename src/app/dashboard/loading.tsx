@@ -1,1 +1,2 @@
-export default function Loading(){return <div className="animate-pulse"><div className="h-4 w-28 rounded bg-mint"/><div className="mt-4 h-12 w-72 rounded-xl bg-slate-200"/><div className="mt-8 h-28 rounded-2xl bg-white"/><div className="mt-5 grid gap-4 sm:grid-cols-2">{Array.from({length:4},(_,i)=><div key={i} className="h-24 rounded-2xl bg-white"/>)}</div></div>}
+import { BrandLoader } from "@/components/ui/brand-loader";
+export default function Loading(){return <BrandLoader label="Cargando tu panel" />}

@@ -92,3 +92,22 @@ test("Premium real-image presentation retains image source and falls back to ini
   expect(await image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
   await image.dispatchEvent("error"); await expect(page.locator(".account-trigger .account-avatar")).toHaveText("J");
 });
+test("Brand motion plays once, falls back safely and respects reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const logo=page.getByRole("banner").getByRole("img",{name:"Tiki Taka"});
+  await expect(logo).toHaveAttribute("src",/\/logo-transparent\.png$/);
+  await page.waitForTimeout(950);
+  await expect(logo).not.toHaveClass(/brand-logo-enter/);
+  await page.reload();
+  await expect(logo).not.toHaveClass(/brand-logo-enter/);
+  await page.evaluate(()=>sessionStorage.removeItem("tikitaka:brand-entered"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(logo).not.toHaveClass(/brand-logo-enter/);
+});
+test("Transparent logo keeps the current official logo as technical fallback", async ({ page }) => {
+  await page.route("**/logo-transparent.png", route => route.fulfill({ status: 404, body: "" }));
+  await page.goto("/");
+  await expect(page.getByRole("banner").getByRole("img",{name:"Tiki Taka"})).toHaveAttribute("src",/\/logo2\.png$/);
+});

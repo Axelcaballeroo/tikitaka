@@ -58,7 +58,7 @@ test("Provider cannot read another provider's services or images", async () => {
       }}) };
     },
   };
-  const account=load("src/lib/auth/account.ts",{"server-only":{},"next/navigation":{redirect:()=>{throw Error("redirect");}},"@/lib/supabase/auth-server":{createAuthServerClient:async()=>db}});
+  const account=load("src/lib/auth/account.ts",{"server-only":{},"react":{cache:fn=>fn},"next/navigation":{redirect:()=>{throw Error("redirect");}},"@/lib/supabase/auth-server":{createAuthServerClient:async()=>db}});
   await assert.rejects(account.getAccountServices("provider-b"),/No autorizado/);
   await assert.rejects(account.getAccountImages("provider-b"),/No autorizado/);
   assert.deepEqual(calls,["providers","providers"]);

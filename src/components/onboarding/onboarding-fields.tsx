@@ -1,6 +1,8 @@
 import { GeographyFields } from "@/components/geography-fields";
 import type { Category } from "@/types";
 import type { OnboardingDraft, OnboardingService } from "@/lib/onboarding";
+import { parseCoverage, parseSchedule, scheduleDays, serializeCoverage, serializeSchedule } from "@/lib/onboarding";
+import { useState } from "react";
 
 type Props = {
   draft: OnboardingDraft;
@@ -235,6 +237,17 @@ export function ServicesStep({ draft, errors, update }: Props) {
     </div>
   );
 }
+function CoverageInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [input, setInput] = useState("");
+  const tags = parseCoverage(value);
+  const add = () => { const next = input.trim().replace(/[,;]+$/, ""); if (!next) return; onChange(serializeCoverage([...tags, next])); setInput(""); };
+  return <div className="onb-chip-field"><div className="onb-chips" aria-label="Zonas adicionales">{tags.map(tag => <span key={tag}>{tag}<button type="button" aria-label={`Quitar ${tag}`} onClick={() => onChange(serializeCoverage(tags.filter(item => item !== tag)))}>×</button></span>)}</div><div className="onb-chip-entry"><input id="coverage" value={input} maxLength={100} placeholder="Agregar zona o localidad…" onChange={event => setInput(event.target.value)} onBlur={add} onKeyDown={event => { if (["Enter", ","].includes(event.key)) { event.preventDefault(); add(); } }} /><button type="button" onMouseDown={event => event.preventDefault()} onClick={add}>Agregar</button></div></div>;
+}
+function ScheduleInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const parsed = parseSchedule(value);
+  const setDefined = (days = parsed.days.length ? parsed.days : ["L", "M", "X", "J", "V"], from = parsed.from, to = parsed.to) => onChange(serializeSchedule("defined", days, from, to));
+  return <fieldset className="onb-schedule"><legend className="sr-only">¿Cuándo atendés?</legend><div className="onb-schedule-modes"><label><input type="radio" name="scheduleMode" checked={parsed.mode === "defined"} onChange={() => setDefined()} /> Con horario definido</label><label><input type="radio" name="scheduleMode" checked={parsed.mode === "flexible"} onChange={() => onChange("A coordinar")} /> A coordinar</label></div>{parsed.mode === "defined" && <div className="onb-schedule-detail"><div className="onb-days" aria-label="Días de atención">{scheduleDays.map(([code, label]) => <button type="button" key={code} title={label} aria-pressed={parsed.days.includes(code)} onClick={() => setDefined(parsed.days.includes(code) ? parsed.days.filter(day => day !== code) : [...parsed.days, code])}>{code}</button>)}</div><div className="onb-times"><label>Desde<input type="time" value={parsed.from} onChange={event => setDefined(parsed.days, event.target.value, parsed.to)} /></label><label>Hasta<input type="time" value={parsed.to} onChange={event => setDefined(parsed.days, parsed.from, event.target.value)} /></label></div></div>}</fieldset>;
+}
 export function ContactStep({ draft, errors, update }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -272,42 +285,24 @@ export function ContactStep({ draft, errors, update }: Props) {
       ))}
       <div className="sm:col-span-2">
         <OnboardingField
-          label="Zona de cobertura (opcional)"
+          label="¿También trabajás en otras zonas?"
           name="coverage"
           error={errors.coverage}
-          help="Podés separar las zonas con comas."
+          help="Agregá sólo las localidades extra donde prestás servicio."
         >
-          <textarea
-            id="coverage"
-            rows={2}
-            maxLength={1000}
-            value={draft.coverage}
-            onChange={(e) => update("coverage", e.target.value)}
-            className="onb-input"
-          />
+          <CoverageInput value={draft.coverage} onChange={value => update("coverage", value)} />
         </OnboardingField>
       </div>
       <div className="sm:col-span-2">
         <OnboardingField
-          label="Horarios (opcional)"
+          label="¿Cuándo atendés?"
           name="schedule"
           error={errors.schedule}
-          help="Por ejemplo: lunes a viernes de 9 a 18 h."
         >
-          <textarea
-            id="schedule"
-            rows={2}
-            maxLength={500}
-            value={draft.schedule}
-            onChange={(e) => update("schedule", e.target.value)}
-            className="onb-input"
-          />
+          <ScheduleInput value={draft.schedule} onChange={value => update("schedule", value)} />
         </OnboardingField>
       </div>
-      <p className="rounded-2xl bg-mint p-4 text-sm leading-6 text-muted sm:col-span-2">
-        Las familias podrán contactarte directamente por WhatsApp. No necesitás
-        publicar tu dirección exacta.
-      </p>
+      <aside className="onb-privacy sm:col-span-2"><span aria-hidden>♡</span><div><strong>Tu privacidad primero</strong><p>Las familias podrán escribirte por WhatsApp sin que tengas que publicar tu dirección exacta.</p></div></aside>
     </div>
   );
 }

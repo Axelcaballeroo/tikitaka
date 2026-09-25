@@ -69,7 +69,29 @@ test("registration selector keeps family fields personal and provider onboarding
   await page.getByRole("button",{name:/Soy proveedor/}).click();
   await expect(page.getByRole("heading",{name:"Creá tu cuenta de proveedor"})).toBeVisible();
 });
-for(const role of ["admin","provider"] as const) test(`${role}: verified account menu, redirects, responsive panel, logout`, async({page})=>{
+test("onboarding contact uses coverage tags, schedule modes and compact privacy callout", async ({ page }) => {
+  await page.getByLabel("Email",{exact:true}).fill("familia@example.test");
+  await page.locator("input[type=password]").fill(randomUUID());
+  await page.getByRole("button",{name:/Ingresar/}).click();
+  await expect(page).toHaveURL(/\/cuenta$/);
+  await page.goto("/publicar");
+  await page.getByLabel(/Nombre del negocio/).fill("Familia Emprende QA");
+  await page.getByLabel("Categoría",{exact:true}).selectOption("clases-particulares");
+  await page.getByLabel("Descripción breve").fill("Una propuesta infantil completa para validar el onboarding aislado.");
+  await page.getByRole("button",{name:/Siguiente/}).click();
+  await page.getByRole("button",{name:/Siguiente/}).click();
+  await page.getByRole("button",{name:/Siguiente/}).click();
+  await expect(page.getByLabel("¿También trabajás en otras zonas?")).toBeVisible();
+  const coverage=page.getByPlaceholder("Agregar zona o localidad…");
+  await coverage.fill("Martínez");await coverage.press("Enter");
+  await coverage.fill("Beccar");await coverage.press("Enter");
+  await expect(page.getByLabel("Quitar Martínez")).toBeVisible();
+  await page.getByLabel("Con horario definido").check();
+  await expect(page.getByLabel("Días de atención")).toBeVisible();
+  await expect(page.getByText("Tu privacidad primero")).toBeVisible();
+  for(const width of [375,430,768,1024,1440]){await page.setViewportSize({width,height:950});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);}
+});
+for(const role of ["admin","provider"] as const) test(`${role}: verified account menu, redirects, responsive panel, logout`, async({page,context})=>{
   await page.getByLabel("Email",{exact:true}).fill(role==="admin"?"cami@example.test":"qa@example.test");
   await page.locator("input[type=password]").fill(randomUUID());
   await page.getByRole("button",{name:/Ingresar/}).click();
@@ -78,6 +100,10 @@ for(const role of ["admin","provider"] as const) test(`${role}: verified account
   await page.goto(role==="admin"?"/dashboard":"/admin");
   await expect(page).toHaveURL(new RegExp(`/${role==="admin"?"admin":"cuenta"}$`));
   if(role==="provider") await page.goto("/dashboard");
+  if(role==="provider") {
+    const childRoutes=["/dashboard","/dashboard/perfil","/dashboard/servicios","/dashboard/fotos","/dashboard/estadisticas","/dashboard/plan","/dashboard/vista-publica"];
+    for(const path of childRoutes){await page.goto(path);await expect(page).toHaveURL(new RegExp(path+"$"));await expect(page.getByRole("link",{name:"Cerrar sesión"})).toBeVisible();await page.reload();await expect(page).toHaveURL(new RegExp(path+"$"));const tab=await context.newPage();await tab.goto(path);await expect(tab).toHaveURL(new RegExp(path+"$"));await tab.close();}
+  }
   for(const width of [375,430,768,1024,1440]){
     await page.setViewportSize({width,height:950});
     await expect(page.getByRole("button",{name:new RegExp(greeting)})).toBeVisible();

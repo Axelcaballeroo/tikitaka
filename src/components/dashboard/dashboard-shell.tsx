@@ -50,7 +50,7 @@ export function DashboardShell({
             Cerrar sesión →
           </Link>
         </aside>
-        <main className="min-w-0 p-4 md:p-7 lg:p-8">{children}</main>
+        <main className="page-enter min-w-0 p-4 md:p-7 lg:p-8">{children}</main>
       </div>
     </div>
   );

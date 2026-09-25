@@ -57,6 +57,24 @@ export const onboardingSteps = [
   "Enviar",
 ];
 export const normalizeWhatsapp = (value: string) => value.replace(/\D/g, "");
+export const scheduleDays = [
+  ["L", "Lunes"], ["M", "Martes"], ["X", "Miércoles"], ["J", "Jueves"], ["V", "Viernes"], ["S", "Sábado"], ["D", "Domingo"],
+] as const;
+export function parseCoverage(value: string) {
+  return [...new Set(value.split(/[,;\n]+/).map(item => item.trim()).filter(Boolean))].slice(0, 12);
+}
+export const serializeCoverage = (items: string[]) => [...new Set(items.map(item => item.trim()).filter(Boolean))].slice(0, 12).join(", ");
+export function parseSchedule(value: string) {
+  if (!value.trim() || /^a coordinar$/i.test(value.trim())) return { mode: "flexible" as const, days: [] as string[], from: "09:00", to: "18:00" };
+  const times = value.match(/(\d{2}:\d{2})\s*(?:a|–|-)\s*(\d{2}:\d{2})/i);
+  const days = scheduleDays.filter(([, label]) => value.toLocaleLowerCase("es").includes(label.toLocaleLowerCase("es"))).map(([code]) => code);
+  return { mode: "defined" as const, days: days.length ? days : ["L", "M", "X", "J", "V"], from: times?.[1] ?? "09:00", to: times?.[2] ?? "18:00" };
+}
+export function serializeSchedule(mode: "flexible" | "defined", days: string[], from: string, to: string) {
+  if (mode === "flexible") return "A coordinar";
+  const labels = scheduleDays.filter(([code]) => days.includes(code)).map(([, label]) => label);
+  return labels.length ? `${labels.join(", ")} · ${from} a ${to}` : "";
+}
 export function validateDraft(input: unknown, complete = false, strictGeography = true) {
   const errors: Record<string, string> = {};
   const raw =
